@@ -28,7 +28,7 @@ except ImportError as e:
 NUM_FAN_TRAY = 4
 NUM_FAN = 2
 NUM_PSU = 2
-NUM_THERMAL = 10
+NUM_THERMAL = 12
 NUM_SFP = 32
 NUM_COMPONENT = 5
 REBOOT_CAUSE_REG = "0xA106"
@@ -40,7 +40,6 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
-
         self._eeprom = Eeprom(TLV_EEPROM_I2C_BUS, TLV_EEPROM_I2C_ADDR)
         self._api_helper = APIHelper()
 
@@ -59,9 +58,9 @@ class Chassis(ChassisBase):
         # for index in range(0, NUM_COMPONENT):
         #     component = Component(index)
         #     self._component_list.append(component)
-        # for index in range(0, NUM_THERMAL):
-        #     thermal = Thermal(index)
-        #     self._thermal_list.append(thermal)
+        for index in range(0, NUM_THERMAL):
+            thermal = Thermal(index)
+            self._thermal_list.append(thermal)
 
     def get_base_mac(self):
         """
