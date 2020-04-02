@@ -47,13 +47,14 @@ PSU_POWER_DIVIDER = 1000000
 PSU_VOLT_DIVIDER = 1000
 PSU_CUR_DIVIDER = 1000
 
+PSU_MUX_HWMON_PATH = "/sys/bus/i2c/devices/i2c-68/i2c-{0}/{0}-00{1}/"
+
 
 class Psu(PsuBase):
     """Platform-specific Psu class"""
 
     def __init__(self, psu_index):
         PsuBase.__init__(self)
-
         self.index = psu_index
         for fan_index in range(0, PSU_NUM_FAN[self.index]):
             fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
@@ -75,7 +76,6 @@ class Psu(PsuBase):
             PSU_STATUS_REGISTER)
         psu_status_bin = self._api_helper.hex_to_bin(psu_status_raw)
         return str(psu_status_bin)[2:][::-1]
-
 
     def get_voltage(self):
         """
@@ -206,7 +206,8 @@ class Psu(PsuBase):
         Returns:
             string: Model/part number of device
         """
-        return 'N/A'
+        temp_file = PSU_MUX_HWMON_PATH.format( ((self.index) + 75), self.index+50 )
+        return self._api_helper.fru_decode_product_model(self._api_helper.read_eeprom_sysfs(temp_file, "eeprom"))
 
     def get_serial(self):
         """
@@ -214,7 +215,8 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        return 'N/A'
+        temp_file = PSU_MUX_HWMON_PATH.format( ((self.index) + 75), self.index+50  )
+        return self._api_helper.fru_decode_product_serial(self._api_helper.read_eeprom_sysfs(temp_file, "eeprom"))
 
     def get_status(self):
         """
