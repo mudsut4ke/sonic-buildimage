@@ -35,6 +35,7 @@ REBOOT_CAUSE_REG = "0xA106"
 TLV_EEPROM_I2C_BUS = 0
 TLV_EEPROM_I2C_ADDR = 56
 
+
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
@@ -148,3 +149,16 @@ class Chassis(ChassisBase):
             sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
+
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        if self._watchdog is None:
+            from sonic_platform.watchdog import Watchdog
+            self._watchdog = Watchdog()
+
+        return self._watchdog

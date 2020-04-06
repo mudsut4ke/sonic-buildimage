@@ -4,6 +4,7 @@ import os
 import struct
 import subprocess
 from mmap import *
+from sonic_daemon_base.daemon_base import DaemonBase
 
 SCALE = 16
 BIN_BITS = 8
@@ -16,7 +17,7 @@ GETREG_PATH = "/sys/devices/platform/{}/getreg".format(BASE_CPLD_PLATFORM)
 class APIHelper():
 
     def __init__(self):
-        pass
+        (self.platform, self.hwsku) = DaemonBase().get_platform_and_hwsku()
 
     def get_register_value(self, register):
         cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
