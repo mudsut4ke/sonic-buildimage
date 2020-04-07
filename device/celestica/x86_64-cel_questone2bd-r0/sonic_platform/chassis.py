@@ -30,11 +30,13 @@ NUM_FAN = 2
 NUM_PSU = 2
 NUM_THERMAL = 12
 NUM_SFP = 56
-NUM_COMPONENT = 5
+NUM_COMPONENT = 8
 REBOOT_CAUSE_REG = "0xA106"
 TLV_EEPROM_I2C_BUS = 0
 TLV_EEPROM_I2C_ADDR = 56
 
+BASE_CPLD_PLATFORM = "questone2bd.cpldb"
+BASE_GETREG_PATH = "/sys/devices/platform/{}/getreg".format(BASE_CPLD_PLATFORM)
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -57,9 +59,10 @@ class Chassis(ChassisBase):
             sfp = Sfp(index)
             self._sfp_list.append(sfp)
 
-        # for index in range(0, NUM_COMPONENT):
-        #     component = Component(index)
-        #     self._component_list.append(component)
+        for index in range(0, NUM_COMPONENT):
+            component = Component(index)
+            self._component_list.append(component)
+
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
@@ -103,7 +106,7 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
 
-        raw_cause = self._api_helper.get_register_value(REBOOT_CAUSE_REG)
+        raw_cause = self._api_helper.get_register_value(BASE_GETREG_PATH, REBOOT_CAUSE_REG)
         hx_cause = raw_cause.lower()
         reboot_cause = {
             "0x00": self.REBOOT_CAUSE_HARDWARE_OTHER,
