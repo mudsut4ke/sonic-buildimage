@@ -5,9 +5,9 @@
 
 try:
     import time
-    from sonic_sfp.sfputilbase import SfpUtilBase
-    from sonic_sfp.sff8472 import sff8472InterfaceId, sff8472Dom
-    from sonic_sfp.sff8436 import sff8436InterfaceId, sff8436Dom
+    from sonic_platform_base.sonic_sfp.sfputilbase import SfpUtilBase
+    from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId, sff8472Dom
+    from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId, sff8436Dom
     from sonic_platform_base.sonic_sfp.inf8628 import inf8628InterfaceId
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId, qsfp_dd_Dom
     from sonic_platform_base.sonic_sfp.sffbase import sffbase
@@ -18,7 +18,9 @@ except ImportError as e:
 class QSFPDDDomPaser(qsfp_dd_Dom):
 
     def __init__(self, eeprom_raw_data):
+
         start_pos = 0
+        dom_offset = 256
 
         dom_module_monitor_values = {
             'Temperature':
@@ -35,122 +37,122 @@ class QSFPDDDomPaser(qsfp_dd_Dom):
 
         dom_channel_monitor_params = {
             'RX8Power':
-                {'offset': 200,
+                {'offset': 72 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX7Power':
-                {'offset': 198,
+                {'offset': 70 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX6Power':
-                {'offset': 196,
+                {'offset': 68 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX5Power':
-                {'offset': 194,
+                {'offset': 66 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX4Power':
-                {'offset': 192,
+                {'offset': 64 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX3Power':
-                {'offset': 190,
+                {'offset': 62 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX2Power':
-                {'offset': 188,
+                {'offset': 60 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'RX1Power':
-                {'offset': 186,
+                {'offset': 58 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_rx_power}},
             'TX8Bias':
-                {'offset': 184,
+                {'offset': 56 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX7Bias':
-                {'offset': 182,
+                {'offset': 54 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX6Bias':
-                {'offset': 180,
+                {'offset': 52 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX5Bias':
-                {'offset': 178,
+                {'offset': 50 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX4Bias':
-                {'offset': 176,
+                {'offset': 48 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX3Bias':
-                {'offset': 174,
+                {'offset': 46 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX2Bias':
-                {'offset': 172,
+                {'offset': 44 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX1Bias':
-                {'offset': 170,
+                {'offset': 42 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_bias}},
             'TX8Power':
-                {'offset': 168,
+                {'offset': 40 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX7Power':
-                {'offset': 166,
+                {'offset': 38 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX6Power':
-                {'offset': 164,
+                {'offset': 36 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX5Power':
-                {'offset': 162,
+                {'offset': 34 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX4Power':
-                {'offset': 160,
+                {'offset': 32 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX3Power':
-                {'offset': 158,
+                {'offset': 30 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX2Power':
-                {'offset': 156,
+                {'offset': 28 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}},
             'TX1Power':
-                {'offset': 154,
+                {'offset': 26 + dom_offset,
                  'size': 2,
                  'type': 'func',
                  'decode': {'func': qsfp_dd_Dom.calc_tx_power}}
@@ -184,6 +186,7 @@ class SfpUtil(SfpUtilBase):
 
     EEPROM_OFFSET = 9
     PORT_INFO_PATH = '/sys/class/silverstone_fpga'
+    QSFP_DD_DOM_OFFSET = 2304
 
     _port_name = ""
     _port_to_eeprom_mapping = {}
@@ -223,7 +226,7 @@ class SfpUtil(SfpUtilBase):
     def get_eeprom_dom_raw(self, port_num):
         if port_num in self.osfp_ports:
             # QSFP DOM EEPROM is also at addr 0x50 and thus also stored in eeprom_ifraw
-            return None
+            return self._read_eeprom_devid(port_num, self.IDENTITY_EEPROM_ADDR, self.QSFP_DD_DOM_OFFSET, 128)
         else:
             # Read dom eeprom at addr 0x51
             return self._read_eeprom_devid(port_num, self.DOM_EEPROM_ADDR, 256)
@@ -347,6 +350,15 @@ class SfpUtil(SfpUtilBase):
         """
         raise NotImplementedError
 
+    def get_qsfp_data(self, eeprom_ifraw):
+        sfp_data = {}
+        sfpi_obj = sff8436InterfaceId(eeprom_ifraw)
+        sfpd_obj = sff8436Dom(eeprom_ifraw) if sfpi_obj else {}
+
+        sfp_data['interface'] = sfpi_obj.get_data_pretty() if sfpi_obj else {}
+        sfp_data['dom'] = sfpd_obj.get_data_pretty()
+        return sfp_data
+
     def get_eeprom_dict(self, port_num):
         """Returns dictionary of interface and dom data.
         format: {<port_num> : {'interface': {'version' : '1.0', 'data' : {...}},
@@ -363,24 +375,16 @@ class SfpUtil(SfpUtilBase):
 
         if port_num in self.osfp_ports:
             sfpi_obj = inf8628InterfaceId(eeprom_ifraw)
-            if sfpi_obj is not None:
+            if sfpi_obj:
                 sfp_data['interface'] = sfpi_obj.get_data_pretty()
 
-            sfpd_obj = QSFPDDDomPaser(eeprom_ifraw)
-            if sfpd_obj is not None:
-                sfp_data['dom'] = sfpd_obj.get_data_pretty()
+                # check if it is a 100G module
+                if sfp_data['interface']['data']['Identifier'] == 'QSFP28 or later':
+                    return self.get_qsfp_data(eeprom_ifraw)
 
-            return sfp_data
-        elif port_num in self.qsfp_ports:
-            sfpi_obj = sff8436InterfaceId(eeprom_ifraw)
-            if sfpi_obj is not None:
-                sfp_data['interface'] = sfpi_obj.get_data_pretty()
-            # For Qsfp's the dom data is part of eeprom_if_raw
-            # The first 128 bytes
-
-            sfpd_obj = sff8436Dom(eeprom_ifraw)
-            if sfpd_obj is not None:
-                sfp_data['dom'] = sfpd_obj.get_data_pretty()
+            sfpd_obj = QSFPDDDomPaser(
+                eeprom_ifraw + eeprom_domraw) if eeprom_domraw else None
+            sfp_data['dom'] = sfpd_obj.get_data_pretty() if sfpd_obj else {}
 
             return sfp_data
         else:
@@ -395,3 +399,4 @@ class SfpUtil(SfpUtilBase):
                     sfp_data['dom'] = sfpd_obj.get_data_pretty()
 
             return sfp_data
+        return
