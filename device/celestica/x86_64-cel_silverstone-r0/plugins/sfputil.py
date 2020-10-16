@@ -356,7 +356,7 @@ class SfpUtil(SfpUtilBase):
         sfpd_obj = sff8436Dom(eeprom_ifraw) if sfpi_obj else {}
 
         sfp_data['interface'] = sfpi_obj.get_data_pretty() if sfpi_obj else {}
-        sfp_data['dom'] = sfpd_obj.get_data_pretty()
+        sfp_data['dom'] = sfpd_obj.get_data_pretty() if sfpd_obj else {}
         return sfp_data
 
     def get_eeprom_dict(self, port_num):
