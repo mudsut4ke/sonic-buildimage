@@ -253,3 +253,7 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
+
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
