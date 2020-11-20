@@ -1,42 +1,51 @@
-#!/usr/bin/env python
+from sonic_platform_base.sonic_thermal_control.thermal_condition_base import ThermalPolicyConditionBase
+from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 
-from __future__ import print_function
 
-try:
-   from sonic_platform_base.sonic_thermal_control.thermal_condition_base \
-      import ThermalPolicyConditionBase
-   from sonic_platform_base.sonic_thermal_control.thermal_json_object \
-      import thermal_json_object
-except ImportError as e:
-   raise ImportError("%s - required module not found" % e)
+class FanCondition(ThermalPolicyConditionBase):
+    def get_fan_info(self, thermal_info_dict):
+        from .thermal_infos import FanInfo
+        if FanInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[FanInfo.INFO_NAME], FanInfo):
+            return thermal_info_dict[FanInfo.INFO_NAME]
+        else:
+            return None
 
-class ThermalPolicyCondition(ThermalPolicyConditionBase):
-   """
-   Policy conditions to be matched by chassis info
-   """
-   pass
 
-@thermal_json_object("thermal.any.critical")
-class ThermalAnyCriticalCondition(ThermalPolicyCondition):
-   def is_match(self, thermal_info_dict):
-      return any(thermal_info_dict['thermal_info'].thermals_critical.values())
+@thermal_json_object('fan.any.absence')
+class AnyFanAbsenceCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_absence_fans()) > 0 if fan_info_obj else False
 
-@thermal_json_object("thermal.any.overheat")
-class ThermalAnyOverheatCondition(ThermalPolicyCondition):
-   def is_match(self, thermal_info_dict):
-      return any(thermal_info_dict['thermal_info'].thermals_overheat.values())
 
-@thermal_json_object("fan.any.absent")
-class FanAnyAbsentCondition(ThermalPolicyCondition):
-   def is_match(self, thermal_info_dict):
-      return not all(thermal_info_dict['fan_info'].fans_presence.values())
+@thermal_json_object('fan.all.absence')
+class AllFanAbsenceCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_presence_fans()) == 0 if fan_info_obj else False
 
-@thermal_json_object("fan.any.fault")
-class FanAnyFaultCondition(ThermalPolicyCondition):
-   def is_match(self, thermal_info_dict):
-      return not all(thermal_info_dict['fan_info'].fans_status.values())
 
-@thermal_json_object("normal")
-class NormalCondition(ThermalPolicyCondition):
-   def is_match(self, thermal_info_dict):
-      return True
+@thermal_json_object('fan.all.presence')
+class AllFanPresenceCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_absence_fans()) == 0 if fan_info_obj else False
+
+
+class ThermalCondition(ThermalPolicyConditionBase):
+    def get_thermal_info(self, thermal_info_dict):
+        from .thermal_infos import ThermalInfo
+        if ThermalInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[ThermalInfo.INFO_NAME], ThermalInfo):
+            return thermal_info_dict[ThermalInfo.INFO_NAME]
+        else:
+            return None
+
+
+@thermal_json_object('thermal.over.high_critical_threshold')
+class ThermalOverHighCriticalCondition(ThermalCondition):
+    def is_match(self, thermal_info_dict):
+        thermal_info_obj = self.get_thermal_info(thermal_info_dict)
+        if thermal_info_obj:
+            return thermal_info_obj.is_over_high_critical_threshold()
+        else:
+            return False

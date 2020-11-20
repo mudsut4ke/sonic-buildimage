@@ -46,6 +46,27 @@ class Thermal(ThermalBase):
             4: "i2c-15/15-004e/hwmon/hwmon5"   # u9201 system-outlet
         }.get(self.index, None)
 
+        max_crit_thres = {
+            0: {
+                "F2B": 50
+            },
+            1: {
+                "F2B": 50
+            },
+            2: {
+                "F2B": 75,
+                "B2F": 65
+            },
+            3: {
+                "F2B": 75,
+                "B2F": 75
+            },
+            4: {
+                "F2B": 75,
+                "B2F": 75
+            }
+        }.get(self.index, None)
+
         self.hwmon_path = "{}/{}".format(self.I2C_ADAPTER_PATH, i2c_path)
         self.ss_key = self.THERMAL_NAME_LIST[self.index]
         self.ss_index = 1
@@ -85,6 +106,15 @@ class Thermal(ThermalBase):
         temp_file = "temp{}_max".format(self.ss_index)
         return self.__get_temp(temp_file)
 
+    def get_low_threshold(self):
+        """
+        Retrieves the low threshold temperature of thermal
+        Returns:
+            A float number, the low threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        return 0.0
+
     def set_high_threshold(self, temperature):
         """
         Sets the high threshold temperature of thermal
@@ -116,6 +146,35 @@ class Thermal(ThermalBase):
                 file_set = False
 
         return is_set & file_set
+
+    def set_low_threshold(self, temperature):
+        """
+        Sets the low threshold temperature of thermal
+        Args : 
+            temperature: A float number up to nearest thousandth of one degree Celsius,
+            e.g. 30.125
+        Returns:
+            A boolean, True if threshold is set successfully, False if not
+        """
+        return False
+
+    def get_high_critical_threshold(self):
+        """
+        Retrieves the high critical threshold temperature of thermal
+        Returns:
+            A float number, the high critical threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        raise NotImplementedError
+
+    def get_low_critical_threshold(self):
+        """
+        Retrieves the low critical threshold temperature of thermal
+        Returns:
+            A float number, the low critical threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        return 0.0
 
     def get_name(self):
         """

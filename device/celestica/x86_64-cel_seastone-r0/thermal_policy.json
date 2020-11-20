@@ -16,10 +16,28 @@
     ],
     "policies": [
         {
-            "name": "any thermal critical",
+            "name": "any fan absence",
             "conditions": [
                 {
-                    "type": "thermal.any.critical"
+                    "type": "fan.any.absence"
+                }
+            ],
+            "actions": [
+                {
+                    "type": "thermal_control.control",
+                    "status": "false"
+                },
+                {
+                    "type": "fan.all.set_speed",
+                    "speed": "100"
+                }
+            ]
+        },
+        {
+            "name": "any thermal warining",
+            "conditions": [
+                {
+                    "type": "thermal.any.warining"
                 }
             ],
             "actions": [
@@ -30,29 +48,15 @@
             ]
         },
         {
-            "name": "any thermal overheat",
+            "name": "temp over high critical threshold",
             "conditions": [
                 {
-                    "type": "thermal.any.overheat"
+                    "type": "thermal.over.high_critical_threshold"
                 }
             ],
             "actions": [
                 {
-                    "type": "fan.all.set_speed",
-                    "speed": "100"
-                }
-            ]
-        },
-        {
-            "name": "normal operations",
-            "conditions": [
-                {
-                    "type": "normal"
-                }
-            ],
-            "actions": [
-                {
-                    "type": "thermal_control.control"
+                    "type": "switch.power_cycling"
                 }
             ]
         }
