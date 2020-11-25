@@ -25,10 +25,12 @@ class Thermal(ThermalBase):
     THERMAL_NAME_LIST = []
     I2C_ADAPTER_PATH = "/sys/class/i2c-adapter"
     SS_CONFIG_PATH = "/usr/share/sonic/device/x86_64-cel_seastone-r0/sensors.conf"
+    NULL = "N/A"
 
-    def __init__(self, thermal_index):
+    def __init__(self, thermal_index, airflow):
         self.index = thermal_index
         self._api_helper = APIHelper()
+        self._airflow = airflow
 
         # Add thermal name
         self.THERMAL_NAME_LIST.append("Front-panel temp sensor 1")
@@ -46,7 +48,7 @@ class Thermal(ThermalBase):
             4: "i2c-15/15-004e/hwmon/hwmon5"   # u9201 system-outlet
         }.get(self.index, None)
 
-        max_crit_thres = {
+        self.max_crit_thres = {
             0: {
                 "F2B": 50
             },
@@ -65,9 +67,10 @@ class Thermal(ThermalBase):
                 "F2B": 75,
                 "B2F": 75
             }
-        }.get(self.index, None)
+        }.get(self.index, {})
 
         self.hwmon_path = "{}/{}".format(self.I2C_ADAPTER_PATH, i2c_path)
+
         self.ss_key = self.THERMAL_NAME_LIST[self.index]
         self.ss_index = 1
 
@@ -165,7 +168,7 @@ class Thermal(ThermalBase):
             A float number, the high critical threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        raise NotImplementedError
+        return self.max_crit_thres.get(self._airflow, 'N/A')
 
     def get_low_critical_threshold(self):
         """
