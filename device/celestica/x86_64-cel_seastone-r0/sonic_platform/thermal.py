@@ -18,6 +18,27 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+HIGH_CRIT_THRESHOLD = {
+    0: {
+        "F2B": 50
+    },
+    1: {
+        "F2B": 50
+    },
+    2: {
+        "F2B": 75,
+        "B2F": 65
+    },
+    3: {
+        "F2B": 75,
+        "B2F": 75
+    },
+    4: {
+        "F2B": 75,
+        "B2F": 75
+    }
+}
+
 
 class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
@@ -48,26 +69,7 @@ class Thermal(ThermalBase):
             4: "i2c-15/15-004e/hwmon/hwmon5"   # u9201 system-outlet
         }.get(self.index, None)
 
-        self.max_crit_thres = {
-            0: {
-                "F2B": 50
-            },
-            1: {
-                "F2B": 50
-            },
-            2: {
-                "F2B": 75,
-                "B2F": 65
-            },
-            3: {
-                "F2B": 75,
-                "B2F": 75
-            },
-            4: {
-                "F2B": 75,
-                "B2F": 75
-            }
-        }.get(self.index, {})
+        self.max_crit_thres = HIGH_CRIT_THRESHOLD.get(self.index, {})
 
         self.hwmon_path = "{}/{}".format(self.I2C_ADAPTER_PATH, i2c_path)
 

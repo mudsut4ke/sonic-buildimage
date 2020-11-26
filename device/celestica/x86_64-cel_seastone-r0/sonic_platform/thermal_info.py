@@ -1,5 +1,6 @@
 from sonic_platform_base.sonic_thermal_control.thermal_info_base import ThermalPolicyInfoBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
+from .thermal import HIGH_CRIT_THRESHOLD
 
 
 @thermal_json_object('fan_info')
@@ -66,14 +67,6 @@ class ThermalInfo(ThermalPolicyInfoBase):
     # Fan information name
     INFO_NAME = 'thermal_info'
 
-    def __init__(self):
-        self.init = False
-        self._old_avg_temp = 0
-        self._current_avg_temp = 0
-        self._high_crital_threshold = 75
-        self._high_threshold = 45
-        self._low_threshold = 40
-
     def collect(self, chassis):
         """
         Collect thermal sensor temperature change status
@@ -81,33 +74,13 @@ class ThermalInfo(ThermalPolicyInfoBase):
         :return:
         """
         self._temps = []
+        self._over_high_threshold = False
         self._over_high_critical_threshold = False
-        self._warm_up_and_over_high_threshold = False
-        self._cool_down_and_below_low_threshold = False
 
         # Calculate average temp within the device
         temp = 0
-        num_of_thermals = chassis.get_num_thermals()
-        for index in range(num_of_thermals):
-            self._temps.insert(index, chassis.get_thermal(index).get_temperature())
-            temp += self._temps[index]
-
-        self._current_avg_temp = temp / num_of_thermals
-
-        # Special case if first time
-        if self.init is False:
-            self._old_avg_temp = self._current_avg_temp
-            self.init = True
-
-        # Check if new average temp exceeds high threshold value
-        if self._current_avg_temp >= self._old_avg_temp and self._current_avg_temp >= self._high_threshold:
-            self._warm_up_and_over_high_threshold = True
-
-        # Check if new average temp exceeds low threshold value
-        if self._current_avg_temp <= self._old_avg_temp and self._current_avg_temp <= self._low_threshold:
-            self._cool_down_and_below_low_threshold = True
-
-        self._old_avg_temp = self._current_avg_temp
+        for thermal in chassis.get_all_thermals():
+            self._warm_up_and_over_high_threshold
 
     def is_warm_up_and_over_high_threshold(self):
         """
@@ -130,6 +103,12 @@ class ThermalInfo(ThermalPolicyInfoBase):
         """
         return self._over_high_critical_threshold
 
+    def is_over_high_threshold(self):
+        """
+        Retrieves if the temperature is over high threshold
+        :return: True if the temperature is over high threshold else False
+        """
+        return self._over_high_threshold
 
 @thermal_json_object('chassis_info')
 class ChassisInfo(ThermalPolicyInfoBase):

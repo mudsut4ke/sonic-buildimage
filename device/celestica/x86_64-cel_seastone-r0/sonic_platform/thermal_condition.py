@@ -26,6 +26,14 @@ class ThermalCondition(ThermalPolicyConditionBase):
         else:
             return None
 
+@thermal_json_object('thermal.over.high_threshold')
+class ThermalOverHighCriticalCondition(ThermalCondition):
+    def is_match(self, thermal_info_dict):
+        thermal_info_obj = self.get_thermal_info(thermal_info_dict)
+        if thermal_info_obj:
+            return thermal_info_obj.is_over_high_critical_threshold()
+        else:
+            return False
 
 @thermal_json_object('thermal.over.high_critical_threshold')
 class ThermalOverHighCriticalCondition(ThermalCondition):
@@ -35,3 +43,4 @@ class ThermalOverHighCriticalCondition(ThermalCondition):
             return thermal_info_obj.is_over_high_critical_threshold()
         else:
             return False
+
