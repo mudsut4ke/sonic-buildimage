@@ -10,35 +10,53 @@ try:
 except ImportError as e:
    raise ImportError("%s - required module not found" % e)
 
-class ThermalPolicyAction(ThermalPolicyActionBase):
-   """
-   A thermal policy action to execute
-   """
-   pass
+@thermal_json_object('thermal_control.control')
+class ControlThermalAlgoAction(ThermalPolicyActionBase):
+    """
+    Action to control the thermal control algorithm
+    """
+    # JSON field definition
+    JSON_FIELD_STATUS = 'status'
 
-class SetFanSpeedAction(ThermalPolicyAction):
-   JSON_FIELD_SPEED = "speed"
+    def __init__(self):
+        self.status = True
 
-   def __init__(self):
-      self.speed = None
+    def load_from_json(self, json_obj):
+        """
+        Construct ControlThermalAlgoAction via JSON. JSON example:
+            {
+                "type": "thermal_control.control"
+                "status": "true"
+            }
+        :param json_obj: A JSON object representing a ControlThermalAlgoAction action.
+        :return:
+        """
+        if ControlThermalAlgoAction.JSON_FIELD_STATUS in json_obj:
+            status_str = json_obj[ControlThermalAlgoAction.JSON_FIELD_STATUS].lower()
+            if status_str == 'true':
+                self.status = True
+            elif status_str == 'false':
+                self.status = False
+            else:
+                raise ValueError('Invalid {} field value, please specify true of false'.
+                                 format(ControlThermalAlgoAction.JSON_FIELD_STATUS))
+        else:
+            raise ValueError('ControlThermalAlgoAction '
+                             'missing mandatory field {} in JSON policy file'.
+                             format(ControlThermalAlgoAction.JSON_FIELD_STATUS))
 
-   def load_from_json(self, json_obj):
-      if self.JSON_FIELD_SPEED in json_obj:
-         self.speed = float(json_obj[self.JSON_FIELD_SPEED])
-      else:
-         raise ValueError("SetFanSpeedAction missing field in json file")
-
-@thermal_json_object("fan.all.set_speed")
-class SetFanSpeedAllAction(SetFanSpeedAction):
-   def execute(self, thermal_info_dict):
-      for fan in thermal_info_dict['fan_info'].fans.values():
-         fan.set_speed(self.speed)
-
-@thermal_json_object("thermal_control.control")
-class ThermalControlAction(ThermalPolicyAction):
-   def execute(self, thermal_info_dict):
-      sensorsToFanSpeed = thermal_info_dict['control_info'].sensorsToFanSpeed
-      fanSpeed = sensorsToFanSpeed(
-            thermal_info_dict['thermal_info'].thermals.values())
-      for fan in thermal_info_dict['fan_info'].fans.values():
-         fan.set_speed(fanSpeed)
+    def execute(self, thermal_info_dict):
+        """
+        Disable thermal control algorithm
+        :param thermal_info_dict: A dictionary stores all thermal information.
+        :return:
+        """
+        from .thermal_infos import ChassisInfo
+        if ChassisInfo.INFO_NAME in thermal_info_dict:
+            chassis_info_obj = thermal_info_dict[ChassisInfo.INFO_NAME]
+            chassis = chassis_info_obj.get_chassis()
+            thermal_manager = chassis.get_thermal_manager()
+            if self.status:
+                thermal_manager.start_thermal_control_algorithm()
+            else:
+                thermal_manager.stop_thermal_control_algorithm()

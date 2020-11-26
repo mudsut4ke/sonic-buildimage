@@ -1,16 +1,17 @@
 from sonic_platform_base.sonic_thermal_control.thermal_manager_base import ThermalManagerBase
+from helper import APIHelper
+
 
 class ThermalManager(ThermalManagerBase):
-    THERMAL_ALGORITHM_CONTROL_PATH = '/var/run/hw-management/config/suspend'
+    FSC_ALGORITHM_CMD = 'service fancontrol {}'
 
     @classmethod
     def start_thermal_control_algorithm(cls):
         """
-        Start thermal control algorithm
-        Returns:
-            bool: True if set success, False if fail.
+        Start vendor specific thermal control algorithm. The default behavior of this function is a no-op.
+        :return:
         """
-        cls._control_thermal_control_algorithm(False)
+        return cls._enable_fancontrol_service(True)
 
     @classmethod
     def stop_thermal_control_algorithm(cls):
@@ -19,23 +20,25 @@ class ThermalManager(ThermalManagerBase):
         Returns:
             bool: True if set success, False if fail.
         """
-        cls._control_thermal_control_algorithm(True)
+        return cls._enable_fancontrol_service(False)
 
     @classmethod
-    def _control_thermal_control_algorithm(cls, suspend):
+    def deinitialize(cls):
         """
-        Control thermal control algorithm
+        Destroy thermal manager, including any vendor specific cleanup. The default behavior of this function
+        is a no-op.
+        :return:
+        """
+        return cls._enable_fancontrol_service(True)
+
+    @classmethod
+    def _enable_fancontrol_service(cls, enable):
+        """
+        Control thermal by fcs algorithm
         Args:
-            suspend: Bool, indicate suspend the algorithm or not
+            enable: Bool, indicate enable the algorithm or not
         Returns:
             bool: True if set success, False if fail.
         """
-        status = True
-        write_value = 1 if suspend else 0
-        try:
-            with open(cls.THERMAL_ALGORITHM_CONTROL_PATH, 'w') as control_file:
-                control_file.write(str(write_value))
-        except (ValueError, IOError):
-            status = False
-
-        return status
+        cmd = 'start' if enable else 'stop'
+        return APIHelper().run_command(FSC_ALGORITHM_CMD.format(cmd))
