@@ -508,17 +508,17 @@ function UpdateFanSpeeds
         maxpwm=${AFCMAXPWM[$fcvcount]}
         let tHyst="${AFCTHYST[$fcvcount]}*1000"
 
-        #if some fan fault detected all pwm=100%
-        CheckFanFault
-        if [ $? -ne 0 ]
-        then
-            echo $MAX > $pwmo
-            let fcvcount=$fcvcount+1
-            continue
-        fi
+        # #if some fan fault detected all pwm=100%
+        # CheckFanFault
+        # if [ $? -ne 0 ]
+        # then
+        #     echo $MAX > $pwmo
+        #     let fcvcount=$fcvcount+1
+        #     continue
+        # fi
 
-		#check thermal overload
-        CheckTempOver
+		# #check thermal overload
+        # CheckTempOver
 
         read tval < ${tsens}
         if [ $? -ne 0 ]

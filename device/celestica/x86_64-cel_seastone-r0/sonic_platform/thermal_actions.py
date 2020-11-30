@@ -7,9 +7,10 @@ try:
         import ThermalPolicyActionBase
     from sonic_platform_base.sonic_thermal_control.thermal_json_object \
         import thermal_json_object
+    from .thermal_infos import ChassisInfo, ThermalInfo
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError("%s - required module not found" % e)
-
 
 @thermal_json_object('thermal_control.control')
 class ControlThermalAlgoAction(ThermalPolicyActionBase):
@@ -53,7 +54,6 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
         :param thermal_info_dict: A dictionary stores all thermal information.
         :return:
         """
-        from .thermal_infos import ChassisInfo
         if ChassisInfo.INFO_NAME in thermal_info_dict:
             chassis_info_obj = thermal_info_dict[ChassisInfo.INFO_NAME]
             chassis = chassis_info_obj.get_chassis()
@@ -64,7 +64,7 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
                 thermal_manager.stop_thermal_control_algorithm()
 
 
-@thermal_json_object('switch.power_cycle')
+@thermal_json_object('switch.power_cycling')
 class SwitchPolicyAction(ThermalPolicyActionBase):
     """
     Base class for thermal action. Once all thermal conditions in a thermal policy are matched,
@@ -72,18 +72,14 @@ class SwitchPolicyAction(ThermalPolicyActionBase):
     """
 
     def execute(self, thermal_info_dict):
-         """
-         Take action when thermal condition matches. For example, adjust speed of fan or shut
-         down the switch.
-         :param thermal_info_dict: A dictionary stores all thermal information.
-         :return:
-         """
-         from helper import APIHelper
-         from .thermal import HIGH_CRIT_THRESHOLD
+        """
+        Take action when thermal condition matches. For example, power cycle the switch.
+        :param thermal_info_dict: A dictionary stores all thermal information.
+        :return:
+        """
+        print("Thermal Over High Critical Condition, Power cycle switch...")
+        #  print(HIGH_CRIT_THRESHOLD)
+        #  print(thermal_info_dict[ThermalInfo.INFO_NAME])
+        cmd = 'bash /usr/share/sonic/platform/thermal_overload_control.sh {}'.format(thermal_info_dict)
+        APIHelper().run_command(cmd)
 
-         print(HIGH_CRIT_THRESHOLD)
-         print(thermal_info_dict)
-
-         # cmd = 'bash /usr/local/bin/thermal_overload_control.sh {}'.format(thermal_info_dict)
-
-         # APIHelper().run_command(cmd)

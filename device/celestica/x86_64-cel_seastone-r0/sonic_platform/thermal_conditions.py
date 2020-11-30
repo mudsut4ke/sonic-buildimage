@@ -18,6 +18,27 @@ class AnyFanAbsenceCondition(FanCondition):
         return len(fan_info_obj.get_absence_fans()) > 0 if fan_info_obj else False
 
 
+@thermal_json_object('fan.any.fault')
+class AnyFanFaultCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_fault_fans()) > 0 if fan_info_obj else False
+
+
+@thermal_json_object('fan.all.presence')
+class AllFanPresenceCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_absence_fans()) == 0 if fan_info_obj else False
+
+
+@thermal_json_object('fan.all.good')
+class AllFanGoodCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_fault_fans()) == 0 if fan_info_obj else False
+
+
 class ThermalCondition(ThermalPolicyConditionBase):
     def get_thermal_info(self, thermal_info_dict):
         from .thermal_infos import ThermalInfo
@@ -26,14 +47,16 @@ class ThermalCondition(ThermalPolicyConditionBase):
         else:
             return None
 
+
 @thermal_json_object('thermal.over.high_threshold')
 class ThermalOverHighCriticalCondition(ThermalCondition):
     def is_match(self, thermal_info_dict):
         thermal_info_obj = self.get_thermal_info(thermal_info_dict)
         if thermal_info_obj:
-            return thermal_info_obj.is_over_high_critical_threshold()
+            return thermal_info_obj.is_over_high_threshold()
         else:
             return False
+
 
 @thermal_json_object('thermal.over.high_critical_threshold')
 class ThermalOverHighCriticalCondition(ThermalCondition):
@@ -44,3 +67,11 @@ class ThermalOverHighCriticalCondition(ThermalCondition):
         else:
             return False
 
+@thermal_json_object('thermal.all.good')
+class ThermalGoodCondition(ThermalCondition):
+    def is_match(self, thermal_info_dict):
+        thermal_info_obj = self.get_thermal_info(thermal_info_dict)
+        if thermal_info_obj:
+            return not thermal_info_obj.is_over_threshold()
+        else:
+            return False

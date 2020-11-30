@@ -15,6 +15,7 @@ class FanInfo(ThermalPolicyInfoBase):
     def __init__(self):
         self._absence_fans = set()
         self._presence_fans = set()
+        self._fault_fans = set()
         self._status_changed = False
 
     def collect(self, chassis):
@@ -25,16 +26,25 @@ class FanInfo(ThermalPolicyInfoBase):
         """
         self._status_changed = False
         for fan in chassis.get_all_fans():
-            if fan.get_presence() and fan not in self._presence_fans:
+            presence = fan.get_presence()
+            status = fan.get_status()
+            if presence and fan not in self._presence_fans:
                 self._presence_fans.add(fan)
                 self._status_changed = True
                 if fan in self._absence_fans:
                     self._absence_fans.remove(fan)
-            elif not fan.get_presence() and fan not in self._absence_fans:
+            elif not presence and fan not in self._absence_fans:
                 self._absence_fans.add(fan)
                 self._status_changed = True
                 if fan in self._presence_fans:
                     self._presence_fans.remove(fan)
+
+            if not status and fan not in self._fault_fans:
+                self._fault_fans.add(fan)
+                self._status_changed = True
+            elif status and fan in self._fault_fans:
+                self._fault_fans.remove(fan)
+                self._status_changed = True
 
     def get_absence_fans(self):
         """
@@ -49,6 +59,13 @@ class FanInfo(ThermalPolicyInfoBase):
         :return: A set of presence fans
         """
         return self._presence_fans
+
+    def get_fault_fans(self):
+        """
+        Retrieves fault fans
+        :return: A set of fault fans
+        """
+        return self._fault_fans
 
     def is_status_changed(self):
         """
@@ -74,27 +91,32 @@ class ThermalInfo(ThermalPolicyInfoBase):
         :return:
         """
         self._temps = []
+        self._thermal_status = True
         self._over_high_threshold = False
-        self._over_high_critical_threshold = False
+        self._cool_down_and_below_low_threshold = False
 
         # Calculate average temp within the device
         temp = 0
-        for thermal in chassis.get_all_thermals():
-            self._warm_up_and_over_high_threshold
+        num_of_thermals = chassis.get_num_thermals()
+        for index in range(num_of_thermals):
+            thermal = chassis.get_thermal(index)
+            temp = thermal.get_temperature()
+            high_threshold = thermal.get_high_threshold()
+            high_critical_threshold = thermal.get_high_critical_threshold()
 
-    def is_warm_up_and_over_high_threshold(self):
-        """
-        Retrieves if the temperature is warm up and over high threshold
-        :return: True if the temperature is warm up and over high threshold else False
-        """
-        return self._warm_up_and_over_high_threshold
+            if high_threshold and temp > high_threshold:
+                self._over_high_threshold = True
 
-    def is_cool_down_and_below_low_threshold(self):
+            if high_critical_threshold and temp > high_critical_threshold:
+                self._over_high_critical_threshold = True
+
+
+    def is_over_threshold(self):
         """
-        Retrieves if the temperature is cold down and below low threshold
-        :return: True if the temperature is cold down and below low threshold else False
+        Retrieves if the temperature is over any threshold
+        :return: True if the temperature is over any threshold else False
         """
-        return self._cool_down_and_below_low_threshold
+        return self._over_high_threshold or self._over_high_critical_threshold
 
     def is_over_high_critical_threshold(self):
         """
@@ -109,6 +131,7 @@ class ThermalInfo(ThermalPolicyInfoBase):
         :return: True if the temperature is over high threshold else False
         """
         return self._over_high_threshold
+
 
 @thermal_json_object('chassis_info')
 class ChassisInfo(ThermalPolicyInfoBase):

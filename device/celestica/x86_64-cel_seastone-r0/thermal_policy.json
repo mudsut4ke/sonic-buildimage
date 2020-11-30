@@ -4,7 +4,7 @@
     },
     "info_types": [
         {
-            "type": "control_info"
+            "type": "chassis_info"
         },
         {
             "type": "fan_info"
@@ -19,6 +19,20 @@
             "conditions": [
                 {
                     "type": "fan.any.absence"
+                }
+            ],
+            "actions": [
+                {
+                    "type": "thermal_control.control",
+                    "status": "false"
+                }
+            ]
+        },
+        {
+            "name": "any fan broken",
+            "conditions": [
+                {
+                    "type": "fan.any.fault"
                 }
             ],
             "actions": [
@@ -70,7 +84,8 @@
             ],
             "actions": [
                 {
-                    "type": "thermal.recover"
+                    "type": "thermal_control.control",
+                    "status": "true"
                 }
             ]
         }
