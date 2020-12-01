@@ -61,6 +61,7 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
             if self.status:
                 thermal_manager.start_thermal_control_algorithm()
             else:
+                print("error detected")
                 thermal_manager.stop_thermal_control_algorithm()
 
 
@@ -77,9 +78,8 @@ class SwitchPolicyAction(ThermalPolicyActionBase):
         :param thermal_info_dict: A dictionary stores all thermal information.
         :return:
         """
-        print("Thermal Over High Critical Condition, Power cycle switch...")
-        #  print(HIGH_CRIT_THRESHOLD)
-        #  print(thermal_info_dict[ThermalInfo.INFO_NAME])
-        cmd = 'bash /usr/share/sonic/platform/thermal_overload_control.sh {}'.format(thermal_info_dict)
-        APIHelper().run_command(cmd)
+        thermal_overload_position_path = '/tmp/thermal_overload_position'
+        thermal_overload_position = APIHelper().read_one_line_file(thermal_overload_position_path)
 
+        cmd = 'bash /usr/share/sonic/platform/thermal_overload_control.sh {}'.format(thermal_overload_position)
+        APIHelper().run_command(cmd)

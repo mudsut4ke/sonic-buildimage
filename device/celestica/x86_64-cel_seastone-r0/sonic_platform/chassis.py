@@ -82,7 +82,8 @@ class Chassis(ChassisBase):
             self._component_list.append(component)
 
     def __get_air_flow(self):
-        air_flow = self._api_helper.read_one_line_file('/usr/share/sonic/platform/fan_airflow')
+        air_flow_path = '/usr/share/sonic/device/{}/fan_airflow'.format(self._api_helper.platform) if self.is_host else '/usr/share/sonic/platform/fan_airflow'
+        air_flow = self._api_helper.read_one_line_file(air_flow_path)
         return air_flow or 'B2F'
 
     def get_base_mac(self):
@@ -257,6 +258,6 @@ class Chassis(ChassisBase):
         """
         return True
 
-    # def get_thermal_manager(self):
-    #     from .thermal_manager import ThermalManager
-    #     return ThermalManager
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager

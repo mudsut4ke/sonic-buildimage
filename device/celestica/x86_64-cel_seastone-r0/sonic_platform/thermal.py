@@ -18,35 +18,41 @@ except ImportError as e:
 
 THERMAL_INFO = {
     0: {
-        "F2B_max_crit": 50,
-        "postion": "ASIC",
+        "F2B_max": 50,
+        "B2F_max": 55,
+        "postion": "asic",
         "name": "Front-panel temp sensor 1",
         "i2c_path": "i2c-5/5-0048/hwmon/hwmon1",    # u4 system-inlet
     },
     1: {
-        "F2B_max_crit": 50,
-        "postion": "ASIC",
+        "F2B_max": 50,
+        "B2F_max": 55,
+        "postion": "asic",
         "name": "Front-panel temp sensor 2",
         "i2c_path": "i2c-6/6-0049/hwmon/hwmon2",    # u2 system-inlet
     },
     2: {
+        "F2B_max": 70,
         "F2B_max_crit": 75,
+        "B2F_max": 60,
         "B2F_max_crit": 65,
-        "postion": "ASIC",
+        "postion": "asic",
         "name": "ASIC temp sensor",
         "i2c_path": "i2c-7/7-004a/hwmon/hwmon3",    # u44 bmc56960-on-board
     },
     3: {
+        "F2B_max": 70,
         "F2B_max_crit": 75,
+        "B2F_max": 70,
         "B2F_max_crit": 75,
-        "postion": "CPU",
+        "postion": "cpu",
         "name": "Rear-panel temp sensor 1",
         "i2c_path": "i2c-14/14-0048/hwmon/hwmon4",  # u9200 cpu-on-board
     },
     4: {
-        "F2B_max_crit": 75,
-        "B2F_max_crit": 75,
-        "postion": "CPU",
+        "F2B_max": 70,
+        "B2F_max": 55,
+        "postion": "cpu",
         "name": "Rear-panel temp sensor 2",
         "i2c_path": "i2c-15/15-004e/hwmon/hwmon5"   # u9201 system-outlet
     }
@@ -68,6 +74,7 @@ class Thermal(ThermalBase):
         self._hwmon_path = "{}/{}".format(I2C_ADAPTER_PATH,
                                          self._thermal_info["i2c_path"])
         self.name = self.get_name()
+        self.postion = self._thermal_info["postion"]
         self.ss_index = 1
 
     def __get_temp(self, temp_file):
@@ -102,8 +109,8 @@ class Thermal(ThermalBase):
             A float number, the high threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        temp_file = "temp{}_max".format(self.ss_index)
-        return self.__get_temp(temp_file)
+        max_crit_key = '{}_max'.format(self._airflow)
+        return self._thermal_info.get(max_crit_key, None)
 
     def get_low_threshold(self):
         """

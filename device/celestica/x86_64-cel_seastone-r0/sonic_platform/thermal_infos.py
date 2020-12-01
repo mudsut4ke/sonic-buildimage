@@ -1,6 +1,7 @@
 from sonic_platform_base.sonic_thermal_control.thermal_info_base import ThermalPolicyInfoBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
-from .thermal import HIGH_CRIT_THRESHOLD
+from .helper import APIHelper
+import time
 
 
 @thermal_json_object('fan_info')
@@ -42,6 +43,7 @@ class FanInfo(ThermalPolicyInfoBase):
             if not status and fan not in self._fault_fans:
                 self._fault_fans.add(fan)
                 self._status_changed = True
+
             elif status and fan in self._fault_fans:
                 self._fault_fans.remove(fan)
                 self._status_changed = True
@@ -90,10 +92,9 @@ class ThermalInfo(ThermalPolicyInfoBase):
         :param chassis: The chassis object
         :return:
         """
-        self._temps = []
-        self._thermal_status = True
         self._over_high_threshold = False
-        self._cool_down_and_below_low_threshold = False
+        self._over_high_critical_threshold = False
+        self._thermal_overload_position = 'cpu'
 
         # Calculate average temp within the device
         temp = 0
@@ -108,8 +109,8 @@ class ThermalInfo(ThermalPolicyInfoBase):
                 self._over_high_threshold = True
 
             if high_critical_threshold and temp > high_critical_threshold:
+                self._thermal_overload_position = thermal.postion
                 self._over_high_critical_threshold = True
-
 
     def is_over_threshold(self):
         """
@@ -123,6 +124,11 @@ class ThermalInfo(ThermalPolicyInfoBase):
         Retrieves if the temperature is over high critical threshold
         :return: True if the temperature is over high critical threshold else False
         """
+        thermal_overload_position_path = '/tmp/thermal_overload_position'
+        if self._over_high_critical_threshold:
+            APIHelper().write_txt_file(thermal_overload_position_path,
+                                       self._thermal_overload_position)
+            time.sleep(1)
         return self._over_high_critical_threshold
 
     def is_over_high_threshold(self):
