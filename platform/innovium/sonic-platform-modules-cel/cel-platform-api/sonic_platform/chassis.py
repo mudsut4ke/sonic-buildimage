@@ -20,11 +20,11 @@ class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
     CHASSIS_CONFIG = 'chassis.json'
-    THERMAL_CONFIG = 'thermal.json'
-    SFP_CONFIG = 'sfp.json'
-    PSU_CONFIG = 'psu.json'
+    # THERMAL_CONFIG = 'thermal.json'
+    # SFP_CONFIG = 'sfp.json'
+    # PSU_CONFIG = 'psu.json'
     FAN_CONFIG = 'fan.json'
-    COMPONENT_CONFIG = 'component.json'
+    # COMPONENT_CONFIG = 'component.json'
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -35,7 +35,7 @@ class Chassis(ChassisBase):
         self.sfp_module_initialized = False
         self.__initialize_eeprom()
         self.__initialize_fan()
-        self.__initialize_psu()
+        # self.__initialize_psu()
 
         # if not self._api_common.is_host():
         #     self.__initialize_fan()
@@ -228,18 +228,18 @@ class Chassis(ChassisBase):
     # ###################### Other methods ########################
     # ##############################################################
 
-    def get_watchdog(self):
-        """
-        Retreives hardware watchdog device on this chassis
-        Returns:
-            An object derived from WatchdogBase representing the hardware
-            watchdog device
-        """
-        if self._watchdog is None:
-            self._watchdog = self._api_common.get_output(
-                0, self._config['get_watchdog'], None)
+    # def get_watchdog(self):
+    #     """
+    #     Retreives hardware watchdog device on this chassis
+    #     Returns:
+    #         An object derived from WatchdogBase representing the hardware
+    #         watchdog device
+    #     """
+    #     if self._watchdog is None:
+    #         self._watchdog = self._api_common.get_output(
+    #             0, self._config['get_watchdog'], None)
 
-        return self._watchdog
+    #     return self._watchdog
 
     # ##############################################################
     # ###################### Device methods ########################
