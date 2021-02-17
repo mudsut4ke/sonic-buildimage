@@ -16,33 +16,33 @@
     },
     "get_presence": {
         "output_source": "ipmitool",
-        "command": "ipmitool raw 0x3a 0x03 0x03 {}",
+        "command": "io_access --get --offset {}",
         "argument": [
-            "0x00",
-            "0x00",
-            "0x01",
-            "0x01",
-            "0x02",
-            "0x02",
-            "0x03",
-            "0x03"
+            "0xA141",
+            "0xA141",
+            "0xA145",
+            "0xA145",
+            "0xA149",
+            "0xA149",
+            "0xA14D",
+            "0xA14D"
         ],
-        "output_translator": "True if '00' in '{}' else False"
+        "output_translator": "True if (int('{}', 16) >> 2 & 1) == 0 else False"
     },
     "get_model": {
         "output_source": "ipmitool",
         "command": "ipmitool fru list {} | grep 'Board Part Number'",
         "argument": [
-            "5",
-            "5",
             "6",
             "6",
             "7",
             "7",
             "8",
-            "8"
+            "8",
+            "9",
+            "9"
         ],
-        "output_translator": "'{}'.split()[-1]"
+        "output_translator": "'{0}'.split()[-1] if '{0}'.split()[-1] != '0xff' else 'N/A'"
     },
     "get_serial": {
         "output_source": "ipmitool",
@@ -57,39 +57,39 @@
             "8",
             "8"
         ],
-        "output_translator": "'{}'.split()[-1]"
+        "output_translator": "'{0}'.split()[-1] if '{0}'.split()[-1] != '0xff' else 'N/A'"
     },
     "get_direction": {
         "output_source": "ipmitool",
-        "command": "ipmitool fru list {} | grep 'F2B\\|B2F'",
+        "command": "io_access --get --offset {}",
         "argument": [
-            "5",
-            "5",
-            "6",
-            "6",
-            "7",
-            "7",
-            "8",
-            "8"
+            "0xA141",
+            "0xA141",
+            "0xA145",
+            "0xA145",
+            "0xA149",
+            "0xA149",
+            "0xA14D",
+            "0xA14D"
         ],
-        "output_translator": "'intake' if 'B2F' in '{}' else 'exhaust'"
+        "output_translator": "'exhaust' if (int('{}', 16) >> 3 & 1) == 0 else 'intake'"
     },
     "get_speed": {
         "output_source": "ipmitool",
-        "command": "ipmitool raw 0x04 0x2d {}",
+        "command": "io_access --get --offset {}",
         "argument": [
-            "0x81",
-            "0x80",
-            "0x83",
-            "0x82",
-            "0x85",
-            "0x84",
-            "0x87",
-            "0x86"
+            "0xA143",
+            "0xA142",
+            "0xA147",
+            "0xA146",
+            "0xA14B",
+            "0xA14A",
+            "0xA14F",
+            "0xA14E"
         ],
         "output_translator": "int('{}'.split()[0],16)*150",
-        "max_front": 23000,
-        "max_rear": 20500
+        "max_front": 13800,
+        "max_rear": 13800
     },
     "get_target_speed": {
         "output_source": "value",
@@ -102,16 +102,16 @@
     "set_speed": {
         "set_method": "ipmitool",
         "input_translator": "hex(int({} * 255 / 100.0))",
-        "command": "ipmitool raw 0x3a 0x0c 0x00 0x03 {}",
+        "command": "io_access --set --val {} --offset",
         "argument": [
-            "0x40 {}",
-            "0x40 {}",
-            "0x44 {}",
-            "0x44 {}",
-            "0x4c {}",
-            "0x4c {}",
-            "0x50 {}",
-            "0x50 {}"
+            "0xA140",
+            "0xA140",
+            "0xA144",
+            "0xA144",
+            "0xA148",
+            "0xA148",
+            "0xA14C",
+            "0xA14C"
         ]
     },
     "set_status_led": {
@@ -122,39 +122,41 @@
             "green"
         ],
         "input_translator": {
-            "off": "0x0",
-            "amber": "0x1",
-            "green": "0x2"
+            "off": "0x3",
+            "red": "0x2",
+            "green": "0x1",
+            "amber": "0x0"
         },
-        "command": "ipmitool raw 0x3a 0x0a {}",
+        "command": "io_access --set --val {} --offset",
         "argument": [
-            "0x4 {}",
-            "0x4 {}",
-            "0x5 {}",
-            "0x5 {}",
-            "0x6 {}",
-            "0x6 {}",
-            "0x7 {}",
-            "0x7 {}"
+            "0xA141",
+            "0xA141",
+            "0xA145",
+            "0xA145",
+            "0xA149",
+            "0xA149",
+            "0xA14D",
+            "0xA14D"
         ]
     },
     "get_status_led": {
         "output_source": "ipmitool",
-        "command": "ipmitool raw 0x3a 0x0b {}",
+        "command": "io_access --get --offset",
         "argument": [
-            "0x4",
-            "0x4",
-            "0x5",
-            "0x5",
-            "0x6",
-            "0x6",
-            "0x7",
-            "0x7"
+            "0xA141",
+            "0xA141",
+            "0xA145",
+            "0xA145",
+            "0xA149",
+            "0xA149",
+            "0xA14D",
+            "0xA14D"
         ],
         "output_translator": {
-            "00": "off",
-            "01": "amber",
-            "02": "green"
+            "0": "amber",
+            "1": "green",
+            "2": "red",
+            "3": "off"
         }
     },
     "psu_fan": [

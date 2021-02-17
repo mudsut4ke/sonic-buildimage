@@ -30,10 +30,10 @@
         "output_source": "ipmitool",
         "command": "ipmitool sdr | grep {}",
         "argument": [
-            "PSUR_VOut",
-            "PSUL_VOut"
+            "Switch_U31_vout",
+            "Switch_U1_vout"
         ],
-        "output_translator": "float('{}'.split()[2])"
+        "output_translator": "float(0 if '{0}'.split()[2]=='no' else '{0}'.split()[2])"
     },
     "get_voltage_high_threshold": {
         "output_source": "ipmitool",
@@ -54,11 +54,12 @@
         "output_translator": "float(0 if '{0}'.split()[-9]=='na' else '{0}'.split()[-9])"
     },
     "get_presence": {
-        "output_source": "ipmitool",
-        "command": "ipmitool raw 0x3a 0x0c 0x00 0x2 0x60",
+        "output_source": "hex_getreg",
+        "reg_addr": "0xA150",
+        "path": "/sys/devices/platform/ms200i_cpld/get_reg",
         "output_translator": [
-            "True if (int('{}', 16) >> 4 & 1) == 0 else False",
-            "True if (int('{}', 16) >> 5 & 1) == 0 else False"
+            "True if (int('{}', 16) >> 4 & 1) == 1 else False",
+            "True if (int('{}', 16) >> 5 & 1) == 1 else False"
         ]
     },
     "get_model": {
@@ -80,8 +81,9 @@
         "output_translator": "'{}'.split()[-1]"
     },
     "get_powergood_status": {
-        "output_source": "ipmitool",
-        "command": "ipmitool raw 0x3a 0x0c 0x0 0x2 0x60",
+        "output_source": "hex_getreg",
+        "reg_addr": "0xA150",
+        "path": "/sys/devices/platform/ms200i_cpld/get_reg",
         "output_translator": [
             "True if (int('{}', 16) >> 2 & 1) == 1 else False",
             "True if (int('{}', 16) >> 3 & 1) == 1 else False"

@@ -33,16 +33,10 @@ class Chassis(ChassisBase):
         self._config = self._api_common.load_json_file(config_path)
 
         self.sfp_module_initialized = False
-        self.__initialize_eeprom()
+        # self.__initialize_components()
+        # self.__initialize_eeprom()
         self.__initialize_fan()
-        self.__initialize_psu()
-
-        # if not self._api_common.is_host():
-        #     self.__initialize_fan()
-        #     self.__initialize_psu()
-        #     self.__initialize_thermals()
-        # else:
-        #     self.__initialize_components()
+        # self.__initialize_psu()
 
     def __initialize_fan(self):
         from sonic_platform.fan import Fan

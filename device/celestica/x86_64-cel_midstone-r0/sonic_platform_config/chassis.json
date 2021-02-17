@@ -2,7 +2,7 @@
     "eeprom": "/sys/class/i2c-adapter/i2c-0/0-0056/eeprom",
     "get_reboot_cause": {
         "output_source": "ipmitool",
-        "command": "ipmitool raw 0x3a 0x0c 0x0 0x2 0x06",
+        "command": "ipmitool chassis restart_cause",
         "output_translator": {
             "00": "Non-Hardware",
             "11": "Hardware - Other",
@@ -17,7 +17,7 @@
     },
     "get_reboot_description": {
         "output_source": "ipmitool",
-        "command": "ipmitool raw 0x3a 0x0c 0x0 0x2 0x06",
+        "command": "ipmitool chassis restart_cause",
         "output_translator": {
             "00": "The last reset is power cycle reset (set register 0xA164)",
             "11": "The last reset is Power on reset",
