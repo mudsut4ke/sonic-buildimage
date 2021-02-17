@@ -13,7 +13,6 @@ class Common:
     CONFIG_DIR = 'sonic_platform_config'
 
     OUTPUT_SOURCE_IPMI = 'ipmitool'
-    OUTPUT_SOURCE_IO = 'io_read'
     OUTPUT_SOURCE_GIVEN_LIST = 'value_list'
     OUTPUT_SOURCE_GIVEN_VALUE = 'value'
     OUTPUT_SOURCE_GIVEN_CLASS = 'class'
@@ -22,17 +21,15 @@ class Common:
     OUTPUT_SOURCE_GIVEN_TXT_FILE = 'txt_file'
     OUTPUT_SOURCE_GIVEN_VER_HEX_FILE = 'hex_version_file'
     OUTPUT_SOURCE_GIVEN_VER_HEX_ADDR = 'hex_version_getreg'
-    OUTPUT_SOURCE_GIVEN_HEX_ADDR = 'hex_getreg'
 
     SET_METHOD_IPMI = 'ipmitool'
-    SET_METHOD_IO = 'io_write'
     NULL_VAL = 'N/A'
     HOST_CHK_CMD = "docker > /dev/null 2>&1"
     REF_KEY = '$ref:'
 
     def __init__(self, conf=None):
         self._main_conf = conf
-        (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
+        (self.platform, self.hwsku) = DaemonBase().get_platform_and_hwsku()
 
     def _run_command(self, command):
         status = False
@@ -82,6 +79,7 @@ class Common:
         status, output = self._run_command(cmd)
         return output if status else None
 
+<<<<<<< HEAD
     def _io_read(self, index, config):
         argument = config.get('argument')
         cmd = config['command'].format(
@@ -89,6 +87,8 @@ class Common:
         status, output = self._run_command(cmd)
         return output if status else None
 
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
     def _sysfs_read(self, index, config):
         sysfs_path = config.get('sysfs_path')
         argument = config.get('argument', '')
@@ -208,9 +208,12 @@ class Common:
         if output_source == self.OUTPUT_SOURCE_IPMI:
             output = self._ipmi_get(index, config)
 
+<<<<<<< HEAD
         elif output_source == self.OUTPUT_SOURCE_IO:
             output = self._io_read(index, config)
 
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
         elif output_source == self.OUTPUT_SOURCE_GIVEN_VALUE:
             output = config["value"]
 
@@ -244,6 +247,7 @@ class Common:
             output = self._hex_ver_decode(
                 hex_ver, config['num_of_bits'], config['num_of_points'])
 
+<<<<<<< HEAD
         elif output_source == self.OUTPUT_SOURCE_GIVEN_HEX_ADDR:
             reg_addr = config['reg_addr']
             if type(reg_addr) == list:
@@ -251,6 +255,8 @@ class Common:
 
             output = self.get_reg(config['path'], reg_addr)
 
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
         else:
             output = default
 
@@ -289,5 +295,9 @@ class Common:
             A value of the attribute of object
         """
         module = imp.load_source(config['class'], config['path'])
+<<<<<<< HEAD
         class_ = getattr(module, config['class'])
+=======
+        class_ = getattr(module, config['class']) 
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
         return class_()

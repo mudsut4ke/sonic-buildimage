@@ -191,6 +191,7 @@ class Fan(FanBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence() and self.get_speed() > 10
+<<<<<<< HEAD
 
     def get_position_in_parent(self):
         """
@@ -208,3 +209,5 @@ class Fan(FanBase):
             bool: True if it is replaceable.
         """
         return True
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48

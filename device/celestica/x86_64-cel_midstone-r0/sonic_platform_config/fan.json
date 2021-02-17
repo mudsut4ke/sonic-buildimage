@@ -16,6 +16,7 @@
     },
     "get_presence": {
         "output_source": "ipmitool",
+<<<<<<< HEAD
         "command": "io_access --get --offset {}",
         "argument": [
             "0xA141",
@@ -28,6 +29,20 @@
             "0xA14D"
         ],
         "output_translator": "True if (int('{}', 16) >> 2 & 1) == 0 else False"
+=======
+        "command": "ipmitool raw 0x3a 0x03 0x03 {}",
+        "argument": [
+            "0x00",
+            "0x00",
+            "0x01",
+            "0x01",
+            "0x02",
+            "0x02",
+            "0x03",
+            "0x03"
+        ],
+        "output_translator": "True if '00' in '{}' else False"
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
     },
     "get_model": {
         "output_source": "ipmitool",
