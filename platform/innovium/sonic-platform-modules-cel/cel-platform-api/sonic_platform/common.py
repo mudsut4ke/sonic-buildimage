@@ -3,7 +3,7 @@ import imp
 import yaml
 import subprocess
 
-from sonic_daemon_base.daemon_base import DaemonBase
+from sonic_py_common import device_info
 
 
 class Common:
@@ -79,6 +79,16 @@ class Common:
         status, output = self._run_command(cmd)
         return output if status else None
 
+<<<<<<< HEAD
+    def _io_read(self, index, config):
+        argument = config.get('argument')
+        cmd = config['command'].format(
+            config['argument'][index]) if argument else config['command']
+        status, output = self._run_command(cmd)
+        return output if status else None
+
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
     def _sysfs_read(self, index, config):
         sysfs_path = config.get('sysfs_path')
         argument = config.get('argument', '')
@@ -198,6 +208,12 @@ class Common:
         if output_source == self.OUTPUT_SOURCE_IPMI:
             output = self._ipmi_get(index, config)
 
+<<<<<<< HEAD
+        elif output_source == self.OUTPUT_SOURCE_IO:
+            output = self._io_read(index, config)
+
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
         elif output_source == self.OUTPUT_SOURCE_GIVEN_VALUE:
             output = config["value"]
 
@@ -231,6 +247,16 @@ class Common:
             output = self._hex_ver_decode(
                 hex_ver, config['num_of_bits'], config['num_of_points'])
 
+<<<<<<< HEAD
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_HEX_ADDR:
+            reg_addr = config['reg_addr']
+            if type(reg_addr) == list:
+                reg_addr = reg_addr[index]
+
+            output = self.get_reg(config['path'], reg_addr)
+
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
         else:
             output = default
 
@@ -269,5 +295,9 @@ class Common:
             A value of the attribute of object
         """
         module = imp.load_source(config['class'], config['path'])
+<<<<<<< HEAD
+        class_ = getattr(module, config['class'])
+=======
         class_ = getattr(module, config['class']) 
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
         return class_()

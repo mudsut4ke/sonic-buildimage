@@ -191,3 +191,23 @@ class Fan(FanBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence() and self.get_speed() > 10
+<<<<<<< HEAD
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return self._fan_index + 1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+=======
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48

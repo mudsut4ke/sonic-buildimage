@@ -155,7 +155,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if PSU is present, False if not
         """
-        return self._api_common.get_output(self._psu_index, self._config['get_name'], False)
+        return self._api_common.get_output(self._psu_index, self._config['get_presence'], False)
 
     def get_model(self):
         """

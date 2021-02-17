@@ -20,11 +20,19 @@ class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
     CHASSIS_CONFIG = 'chassis.json'
+<<<<<<< HEAD
     THERMAL_CONFIG = 'thermal.json'
     SFP_CONFIG = 'sfp.json'
     PSU_CONFIG = 'psu.json'
     FAN_CONFIG = 'fan.json'
     COMPONENT_CONFIG = 'component.json'
+=======
+    # THERMAL_CONFIG = 'thermal.json'
+    # SFP_CONFIG = 'sfp.json'
+    # PSU_CONFIG = 'psu.json'
+    FAN_CONFIG = 'fan.json'
+    # COMPONENT_CONFIG = 'component.json'
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -33,16 +41,10 @@ class Chassis(ChassisBase):
         self._config = self._api_common.load_json_file(config_path)
 
         self.sfp_module_initialized = False
-        self.__initialize_eeprom()
+        # self.__initialize_components()
+        # self.__initialize_eeprom()
         self.__initialize_fan()
-        self.__initialize_psu()
-
-        # if not self._api_common.is_host():
-        #     self.__initialize_fan()
-        #     self.__initialize_psu()
-        #     self.__initialize_thermals()
-        # else:
-        #     self.__initialize_components()
+        # self.__initialize_psu()
 
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
@@ -228,6 +230,7 @@ class Chassis(ChassisBase):
     # ###################### Other methods ########################
     # ##############################################################
 
+<<<<<<< HEAD
     def get_watchdog(self):
         """
         Retreives hardware watchdog device on this chassis
@@ -240,6 +243,20 @@ class Chassis(ChassisBase):
                 0, self._config['get_watchdog'], None)
 
         return self._watchdog
+=======
+    # def get_watchdog(self):
+    #     """
+    #     Retreives hardware watchdog device on this chassis
+    #     Returns:
+    #         An object derived from WatchdogBase representing the hardware
+    #         watchdog device
+    #     """
+    #     if self._watchdog is None:
+    #         self._watchdog = self._api_common.get_output(
+    #             0, self._config['get_watchdog'], None)
+
+    #     return self._watchdog
+>>>>>>> a75fe23c20c01cdfffcabd0ce066715ff0102b48
 
     # ##############################################################
     # ###################### Device methods ########################

@@ -1,7 +1,8 @@
 {
-    "port_num": 32,
+    "port_num": 64,
     "eeprom_path": "/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom",
     "port_i2c_mapping": [
+        1,
         2,
         3,
         4,
@@ -33,25 +34,53 @@
         30,
         31,
         32,
-        33
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
     ],
     "get_presence": {
         "output_source": "sysfs_value",
-        "sysfs_path": "/sys/devices/platform/switchboard/SFF/{}/qsfp_modprs",
-        "argument": "$ref:_port_name",
-        "output_translator": "False if '{}' == '1' else True"
+        "sysfs_path": "/sys/devices/platform/ms200i_cpld/qsfp_modprs",
+        "output_translator": "True if (int('{}', 16) >> self._sfp_index & 1) == 0 else False"
     },
     "get_lpmode": {
         "output_source": "sysfs_value",
-        "sysfs_path": "/sys/devices/platform/switchboard/SFF/{}/qsfp_lpmode",
-        "argument": "$ref:_port_name",
-        "output_translator": "True if '{}' == '1' else False"
+        "sysfs_path": "/sys/devices/platform/ms200i_cpld/qsfp_lpmode",
+        "output_translator": "True if (int('{}', 16) >> self._sfp_index & 1) == 0 else False"
     },
     "get_reset_status": {
         "output_source": "sysfs_value",
-        "sysfs_path": "/sys/devices/platform/switchboard/SFF/{}/qsfp_reset",
-        "argument": "$ref:_port_name",
-        "output_translator": "False if '{}' == '1' else True"
+        "sysfs_path": "/sys/devices/platform/ms200i_cpld/qsfp_reset",
+        "output_translator": "True if (int('{}', 16) >> self._sfp_index & 1) == 0 else False"
     },
     "reset": {
         "set_method": "sysfs_value",
