@@ -133,15 +133,6 @@ class Sfp(SfpBase):
         else:
             return 'N/A'
 
-    def __read_txt_file(self, file_path):
-        try:
-            with open(file_path, 'r') as fd:
-                data = fd.read()
-                return data.strip()
-        except IOError:
-            pass
-        return ""
-
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 

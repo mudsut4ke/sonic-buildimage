@@ -12,6 +12,7 @@ import os.path
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -28,6 +29,7 @@ class Thermal(ThermalBase):
         ThermalBase.__init__(self)
 
         self.index = thermal_index
+        self._api_helper = APIHelper()
 
         # Add thermal name
         self.THERMAL_NAME_LIST.append("Rear  panel-Inlet ambient sensor")
@@ -53,17 +55,9 @@ class Thermal(ThermalBase):
             ss_index = index-3
         return ss_index, ss_path
 
-    def __read_txt_file(self, file_path):
-        try:
-            with open(file_path, 'r') as fd:
-                data = fd.read()
-                return data.strip()
-        except IOError:
-            raise IOError("Unable to open %s file !" % file_path)
-
     def __get_temp(self, temp_file):
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
-        raw_temp = self.__read_txt_file(temp_file_path)
+        raw_temp = self._api_helper.read_txt_file(temp_file_path)
         temp = float(raw_temp)/1000
         return "{:.3f}".format(temp)
 
@@ -160,5 +154,5 @@ class Thermal(ThermalBase):
         if not os.path.isfile(fault_file_path):
             return True
 
-        raw_txt = self.__read_txt_file(fault_file_path)
+        raw_txt = self._api_helper.read_txt_file(fault_file_path)
         return int(raw_txt) == 0

@@ -43,7 +43,6 @@ class Chassis(ChassisBase):
         self.__initialize_eeprom()
         self.is_host = self._api_helper.is_host()
 
-
         if not self.is_host:
             self.__initialize_fan()
             self.__initialize_psu()
@@ -98,15 +97,6 @@ class Chassis(ChassisBase):
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
 
-    def __read_txt_file(self, file_path):
-        try:
-            with open(file_path, 'r') as fd:
-                data = fd.read()
-                return data.strip()
-        except IOError:
-            pass
-        return None
-
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -141,7 +131,7 @@ class Chassis(ChassisBase):
         reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
         hw_reboot_cause = self._component_list[0].get_register_value(
             RESET_REGISTER)
-        sw_reboot_cause = self.__read_txt_file(
+        sw_reboot_cause = self._api_helper.read_txt_file(
             self._reboot_cause_path) or "Unknown"
 
         if hw_reboot_cause == "0x55":
@@ -294,3 +284,54 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
+
+    def get_position_in_parent(self):
+        from .thermal_manager import ThermalManager	        """
+        return ThermalManager	        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
+    # def set_status_led(self, color):
+    #     """
+    #     Sets the state of the PSU status LED
+    #     Args:
+    #         color: A string representing the color with which to set the PSU status LED
+    #                Note: Only support green and off
+    #     Returns:
+    #         bool: True if status LED state is set successfully, False if not
+    #     """
+
+    #     set_status_str = {
+    #         self.STATUS_LED_COLOR_GREEN: '1',
+    #         self.STATUS_LED_COLOR_OFF: '0'
+    #     }.get(color, None)
+
+    #     if not set_status_str:
+    #         return False
+
+    #     return True
+
+    # def get_status_led(self):
+    #     """
+    #     Gets the state of the PSU status LED
+    #     Returns:
+    #         A string, one of the predefined STATUS_LED_COLOR_* strings above
+    #     """
+    #     status = self._api_helper.read_txt_file(STATUS_LED_PATH)
+    #     status_str = {
+    #         '255': self.STATUS_LED_COLOR_GREEN,
+    #         '0': self.STATUS_LED_COLOR_OFF
+    #     }.get(status, None)
+
+    #     return status_str

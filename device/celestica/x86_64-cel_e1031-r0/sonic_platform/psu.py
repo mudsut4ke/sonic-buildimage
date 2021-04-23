@@ -12,6 +12,7 @@ import sonic_platform
 try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.fan import Fan
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -44,25 +45,18 @@ class Psu(PsuBase):
         self.i2c_num = PSU_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = HWMON_PATH.format(self.i2c_num, self.i2c_addr)
+
+        self._api_helper = APIHelper()
         for fan_index in range(0, PSU_NUM_FAN[self.index]):
             fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
             self._fan_list.append(fan)
         PsuBase.__init__(self)
 
-    def __read_txt_file(self, file_path):
-        try:
-            with open(file_path, 'r') as fd:
-                data = fd.read()
-                return data.strip()
-        except IOError:
-            pass
-        return ""
-
     def __search_file_by_contain(self, directory, search_str, file_start):
         for dirpath, dirnames, files in os.walk(directory):
             for name in files:
                 file_path = os.path.join(dirpath, name)
-                if name.startswith(file_start) and search_str in self.__read_txt_file(file_path):
+                if name.startswith(file_start) and search_str in self._api_helper.read_txt_file(file_path):
                     return file_path
         return None
 
@@ -85,7 +79,7 @@ class Psu(PsuBase):
             in_num = ''.join(list(filter(str.isdigit, basename)))
             vout_path = os.path.join(
                 dir_name, voltage_name.format(in_num))
-            vout_val = self.__read_txt_file(vout_path)
+            vout_val = self._api_helper.read_txt_file(vout_path)
             psu_voltage = float(vout_val) / 1000
 
         return psu_voltage
@@ -108,7 +102,7 @@ class Psu(PsuBase):
             cur_num = ''.join(list(filter(str.isdigit, basename)))
             cur_path = os.path.join(
                 dir_name, current_name.format(cur_num))
-            cur_val = self.__read_txt_file(cur_path)
+            cur_val = self._api_helper.read_txt_file(cur_path)
             psu_current = float(cur_val) / 1000
 
         return psu_current
@@ -131,7 +125,7 @@ class Psu(PsuBase):
             pw_num = ''.join(list(filter(str.isdigit, basename)))
             pw_path = os.path.join(
                 dir_name, current_name.format(pw_num))
-            pw_val = self.__read_txt_file(pw_path)
+            pw_val = self._api_helper.read_txt_file(pw_path)
             psu_power = float(pw_val) / 1000000
 
         return psu_power
@@ -181,7 +175,7 @@ class Psu(PsuBase):
             bool: True if PSU is present, False if not
         """
         psu_location = ["R", "L"]
-        presences_status = self.__read_txt_file(
+        presences_status = self._api_helper.read_txt_file(
             self.psu_path + self.psu_presence.format(psu_location[self.index])) or 0
 
         return int(presences_status) == 1
@@ -193,7 +187,7 @@ class Psu(PsuBase):
             A boolean value, True if device is operating properly, False if not
         """
         psu_location = ["R", "L"]
-        power_status = self.__read_txt_file(
+        power_status = self._api_helper.read_txt_file(
             self.psu_path + self.psu_oper_status.format(psu_location[self.index])) or 0
 
         return int(power_status) == 1
