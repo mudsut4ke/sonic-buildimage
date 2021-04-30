@@ -14,7 +14,6 @@ import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase
-    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -37,7 +36,6 @@ class Component(ComponentBase):
         ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.get_name()
-        self._api_helper = APIHelper()
 
     def __run_command(self, command):
         # Run bash command and print output to stdout

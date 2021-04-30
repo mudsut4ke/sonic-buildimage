@@ -11,7 +11,7 @@ import os.path
 try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.fan import Fan
-    from .helper import APIHelper
+    from .common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -43,7 +43,7 @@ class Psu(PsuBase):
 
     def _init_(self, psu_index):
         PsuBase._init_(self)
-        self._api_helper = APIHelper()
+        self._api_common = Common()
 
         self.index = psu_index
         self.psu_presence = "psu{}_prs"
@@ -89,7 +89,7 @@ class Psu(PsuBase):
         for dirpath, dirnames, files in os.walk(directory):
             for name in files:
                 file_path = os.path.join(dirpath, name)
-                if name.startswith(file_start) and search_str in self._api_helper.read_txt_file(file_path):
+                if name.startswith(file_start) and search_str in self._api_common.read_txt_file(file_path):
                     return file_path
         return None
 
@@ -112,7 +112,7 @@ class Psu(PsuBase):
             in_num = ''.join(list(filter(str.isdigit, basename)))
             vout_path = os.path.join(
                 dir_name, voltage_name.format(in_num))
-            vout_val = self._api_helper.read_txt_file(vout_path)
+            vout_val = self._api_common.read_txt_file(vout_path)
             psu_voltage = float(vout_val) / 1000
 
         return psu_voltage
@@ -135,7 +135,7 @@ class Psu(PsuBase):
             cur_num = ''.join(list(filter(str.isdigit, basename)))
             cur_path = os.path.join(
                 dir_name, current_name.format(cur_num))
-            cur_val = self._api_helper.read_txt_file(cur_path)
+            cur_val = self._api_common.read_txt_file(cur_path)
             psu_current = float(cur_val) / 1000
 
         return psu_current
@@ -158,7 +158,7 @@ class Psu(PsuBase):
             pw_num = ''.join(list(filter(str.isdigit, basename)))
             pw_path = os.path.join(
                 dir_name, current_name.format(pw_num))
-            pw_val = self._api_helper.read_txt_file(pw_path)
+            pw_val = self._api_common.read_txt_file(pw_path)
             psu_power = float(pw_val) / 1000000
 
         return psu_power
@@ -208,7 +208,7 @@ class Psu(PsuBase):
             bool: True if PSU is present, False if not
         """
         psu_location = ["R", "L"]
-        presences_status = self._api_helper.read_txt_file(
+        presences_status = self._api_common.read_txt_file(
             PSU_E1031_STAT_PATH + self.psu_presence.format(psu_location[self.index])) or 0
 
         return int(presences_status) == 1
@@ -220,7 +220,7 @@ class Psu(PsuBase):
             A boolean value, True if device is operating properly, False if not
         """
         psu_location = ["R", "L"]
-        power_status = self._api_helper.read_txt_file(
+        power_status = self._api_common.read_txt_file(
             PSU_E1031_STAT_PATH + self.psu_oper_status.format(psu_location[self.index])) or 0
 
         return int(power_status) == 1
@@ -284,7 +284,7 @@ class Psu(PsuBase):
             in_num = ''.join(list(filter(str.isdigit, basename)))
             temp_path = os.path.join(
                 dir_name, temperature_name.format(in_num))
-            vout_val = self._api_helper.read_txt_file(temp_path)
+            vout_val = self._api_common.read_txt_file(temp_path)
             psu_temperature = float(vout_val) / 1000
 
         return psu_temperature
@@ -309,7 +309,7 @@ class Psu(PsuBase):
             in_num = ''.join(list(filter(str.isdigit, basename)))
             temp_path = os.path.join(
                 dir_name, temperature_name.format(in_num))
-            vout_val = self._api_helper.read_txt_file(temp_path)
+            vout_val = self._api_common.read_txt_file(temp_path)
             psu_temperature = float(vout_val) / 1000
 
         return psu_temperature
@@ -333,7 +333,7 @@ class Psu(PsuBase):
             in_num = ''.join(list(filter(str.isdigit, basename)))
             vout_path = os.path.join(
                 dir_name, voltage_name.format(in_num))
-            vout_val = self._api_helper.read_txt_file(vout_path)
+            vout_val = self._api_common.read_txt_file(vout_path)
             psu_voltage = float(vout_val) / 1000
 
         return psu_voltage
@@ -357,7 +357,7 @@ class Psu(PsuBase):
             in_num = ''.join(list(filter(str.isdigit, basename)))
             vout_path = os.path.join(
                 dir_name, voltage_name.format(in_num))
-            vout_val = self._api_helper.read_txt_file(vout_path)
+            vout_val = self._api_common.read_txt_file(vout_path)
             psu_voltage = float(vout_val) / 1000
 
         return psu_voltage

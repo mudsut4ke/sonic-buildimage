@@ -17,12 +17,11 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_py_common import device_info
     from .event import SfpEvent
-    from .helper import APIHelper
+    from .common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 NUM_FAN_TRAY = 3
-NUM_FAN = 1
 NUM_PSU = 2
 NUM_THERMAL = 7
 NUM_SFP = 52
@@ -38,17 +37,15 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
-        self._api_helper = APIHelper()
+        self._api_common = Common()
         self.sfp_module_initialized = False
         self.__initialize_eeprom()
-        self.is_host = self._api_helper.is_host()
+        self.is_host = self._api_common.is_host()
 
-        if not self.is_host:
-            self.__initialize_fan()
-            self.__initialize_psu()
-            self.__initialize_thermals()
-        else:
-            self.__initialize_components()
+        self.__initialize_fan()
+        self.__initialize_psu()
+        self.__initialize_thermals()
+        self.__initialize_components()
 
         self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.__is_host(
         ) else PMON_REBOOT_CAUSE_PATH
@@ -60,8 +57,7 @@ class Chassis(ChassisBase):
 
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            name_idx = 0 if index+1 == NUM_SFP else index+1
-            sfp = Sfp(index, sfputil_helper.logical[name_idx])
+            sfp = Sfp(index, sfputil_helper.logical[index])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
@@ -72,11 +68,10 @@ class Chassis(ChassisBase):
             self._psu_list.append(psu)
 
     def __initialize_fan(self):
-        from sonic_platform.fan import Fan
-        for fant_index in range(0, NUM_FAN_TRAY):
-            for fan_index in range(0, NUM_FAN):
-                fan = Fan(fant_index, fan_index)
-                self._fan_list.append(fan)
+        from sonic_platform.fan_drawer import FanDrawer
+        for i in range(NUM_FAN_TRAY):
+            fandrawer = FanDrawer(i)
+            self._fan_drawer_list.append(fandrawer)
 
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
@@ -131,7 +126,7 @@ class Chassis(ChassisBase):
         reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
         hw_reboot_cause = self._component_list[0].get_register_value(
             RESET_REGISTER)
-        sw_reboot_cause = self._api_helper.read_txt_file(
+        sw_reboot_cause = self._api_common.read_txt_file(
             self._reboot_cause_path) or "Unknown"
 
         if hw_reboot_cause == "0x55":
@@ -251,7 +246,7 @@ class Chassis(ChassisBase):
             Returns:
             string: The name of the device
         """
-        return self._api_helper.hwsku
+        return self._api_common.hwsku
 
     def get_presence(self):
         """
@@ -286,8 +281,8 @@ class Chassis(ChassisBase):
         return True
 
     def get_position_in_parent(self):
-        from .thermal_manager import ThermalManager	        """
-        return ThermalManager	        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
         for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
         Returns:
             integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
@@ -328,7 +323,7 @@ class Chassis(ChassisBase):
     #     Returns:
     #         A string, one of the predefined STATUS_LED_COLOR_* strings above
     #     """
-    #     status = self._api_helper.read_txt_file(STATUS_LED_PATH)
+    #     status = self._api_common.read_txt_file(STATUS_LED_PATH)
     #     status_str = {
     #         '255': self.STATUS_LED_COLOR_GREEN,
     #         '0': self.STATUS_LED_COLOR_OFF
