@@ -120,6 +120,29 @@ class Component(ComponentBase):
 
         return fw_version
 
+    def get_available_firmware_version(self, image_path):
+        """
+        Retrieves the available firmware version of the component
+        Note: the firmware version will be read from image
+        Args:
+            image_path: A string, path to firmware image
+        Returns:
+            A string containing the available firmware version of the component
+        """
+        raise NotImplementedError
+
+    def get_firmware_update_notification(self, image_path):
+        """
+        Retrieves a notification on what should be done in order to complete
+        the component firmware update
+        Args:
+            image_path: A string, path to firmware image
+        Returns:
+            A string containing the component firmware update notification if required.
+            By default 'None' value will be used, which indicates that no actions are required
+        """
+        return None
+
     def install_firmware(self, image_path):
         """
         Install firmware to module
@@ -142,6 +165,47 @@ class Component(ComponentBase):
         #     install_command = "afulnx_64 %s /p /b /n /x /r" % image_path
 
         return self.__run_command(install_command)
+
+    def update_firmware(self, image_path):
+        """
+        Updates firmware of the component
+        This API performs firmware update: it assumes firmware installation and loading in a single call.
+        In case platform component requires some extra steps (apart from calling Low Level Utility)
+        to load the installed firmware (e.g, reboot, power cycle, etc.) - this will be done automatically by API
+        Args:
+            image_path: A string, path to firmware image
+        Raises:
+            RuntimeError: update failed
+        """
+        raise NotImplementedError
+
+    def auto_update_firmware(self, image_path, boot_type):
+        """
+        Updates firmware of the component
+        This API performs firmware update automatically based on boot_type: it assumes firmware installation
+        and/or creating a loading task during the reboot, if needed, in a single call.
+        In case platform component requires some extra steps (apart from calling Low Level Utility)
+        to load the installed firmware (e.g, reboot, power cycle, etc.) - this will be done automatically during the reboot.
+        The loading task will be created by API.
+        Args:
+            image_path: A string, path to firmware image
+            boot_type: A string, reboot type following the upgrade
+                         - none/fast/warm/cold
+        Returns:
+            Output: A return code
+                return_code: An integer number, status of component firmware auto-update
+                    - return code of a positive number indicates successful auto-update
+                        - status_installed = 1
+                        - status_updated = 2
+                        - status_scheduled = 3
+                    - return_code of a negative number indicates failed auto-update
+                        - status_err_boot_type = -1
+                        - status_err_image = -2
+                        - status_err_unknown = -3
+        Raises:
+            RuntimeError: auto-update failure cause
+        """
+        raise NotImplementedError
 
     ##############################################################
     ###################### Device methods ########################
