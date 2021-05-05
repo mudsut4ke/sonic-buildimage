@@ -30,6 +30,7 @@ RESET_REGISTER = "0x112"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/previous-reboot-cause.txt"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/previous-reboot-cause.txt"
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
+STATUS_LED_PATH = "/sys/devices/platform/e1031.smc/master_led"
 
 
 class Chassis(ChassisBase):
@@ -47,50 +48,57 @@ class Chassis(ChassisBase):
         self.__initialize_thermals()
         self.__initialize_components()
 
-        self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.__is_host(
-        ) else PMON_REBOOT_CAUSE_PATH
+        self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.is_host else PMON_REBOOT_CAUSE_PATH
 
     def __initialize_sfp(self):
         sfputil_helper = SfpUtilHelper()
         port_config_file_path = device_info.get_path_to_port_config_file()
         sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
 
-        from sonic_platform.sfp import Sfp
+        from .sfp import Sfp
         for index in range(0, NUM_SFP):
             sfp = Sfp(index, sfputil_helper.logical[index])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
     def __initialize_psu(self):
-        from sonic_platform.psu import Psu
+        from .psu import Psu
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
 
     def __initialize_fan(self):
-        from sonic_platform.fan_drawer import FanDrawer
+        from .fan_drawer import FanDrawer
         for i in range(NUM_FAN_TRAY):
             fandrawer = FanDrawer(i)
             self._fan_drawer_list.append(fandrawer)
+            self._fan_list += fandrawer.get_all_fans()
 
     def __initialize_thermals(self):
-        from sonic_platform.thermal import Thermal
+        from .thermal import Thermal
+        airflow = self.__get_air_flow()
         for index in range(0, NUM_THERMAL):
-            thermal = Thermal(index)
+            thermal = Thermal(index, airflow)
             self._thermal_list.append(thermal)
 
     def __initialize_eeprom(self):
-        from sonic_platform.eeprom import Tlv
+        from .eeprom import Tlv
         self._eeprom = Tlv()
 
     def __initialize_components(self):
-        from sonic_platform.component import Component
+        from .component import Component
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
 
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
+
+    def __get_air_flow(self):
+        air_flow_path = '/usr/share/sonic/device/{}/fan_airflow'.format(
+            self._api_common.platform) if self.is_host else '/usr/share/sonic/platform/fan_airflow'
+        air_flow = self._api_common.read_txt_file(air_flow_path)
+        return air_flow or 'B2F'
 
     def get_base_mac(self):
         """
@@ -297,36 +305,35 @@ class Chassis(ChassisBase):
         """
         return False
 
-    # def set_status_led(self, color):
-    #     """
-    #     Sets the state of the PSU status LED
-    #     Args:
-    #         color: A string representing the color with which to set the PSU status LED
-    #                Note: Only support green and off
-    #     Returns:
-    #         bool: True if status LED state is set successfully, False if not
-    #     """
+    def set_status_led(self, color):
+        """
+        Sets the state of the PSU status LED
+        Args:
+            color: A string representing the color with which to set the PSU status LED
+                   Note: Only support green and off
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+        """
 
-    #     set_status_str = {
-    #         self.STATUS_LED_COLOR_GREEN: '1',
-    #         self.STATUS_LED_COLOR_OFF: '0'
-    #     }.get(color, None)
+        status_str = {
+            self.STATUS_LED_COLOR_GREEN: 'green',
+            self.STATUS_LED_COLOR_AMBER: 'amber',
+            self.STATUS_LED_COLOR_OFF: 'off'
+        }.get(color, 'off')
 
-    #     if not set_status_str:
-    #         return False
+        return self._api_common.write_txt_file(STATUS_LED_PATH, status_str)
 
-    #     return True
+    def get_status_led(self):
+        """
+        Gets the state of the PSU status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        status = self._api_common.read_txt_file(STATUS_LED_PATH)
+        status_str = {
+            'on': self.STATUS_LED_COLOR_GREEN,
+            'amber': self.STATUS_LED_COLOR_AMBER,
+            'off': self.STATUS_LED_COLOR_OFF
+        }.get(status, None)
 
-    # def get_status_led(self):
-    #     """
-    #     Gets the state of the PSU status LED
-    #     Returns:
-    #         A string, one of the predefined STATUS_LED_COLOR_* strings above
-    #     """
-    #     status = self._api_common.read_txt_file(STATUS_LED_PATH)
-    #     status_str = {
-    #         '255': self.STATUS_LED_COLOR_GREEN,
-    #         '0': self.STATUS_LED_COLOR_OFF
-    #     }.get(status, None)
-
-    #     return status_str
+        return status_str

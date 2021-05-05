@@ -21,6 +21,7 @@ FAN_PATH = "/sys/devices/platform/e1031.smc/"
 EMC2305_MAX_PWM = 255
 EMC2305_FAN_PWM = "pwm{}"
 EMC2305_FAN_TARGET = "fan{}_target"
+EMC2305_FAN_PWM_MODE = "pwm{}_enable"
 EMC2305_FAN_INPUT = "pwm{}"
 FAN_NAME_LIST = ["FAN-1", "FAN-2", "FAN-3"]
 FAN_SPEED_TOLERANCE = 10
@@ -36,6 +37,9 @@ PSU_I2C_MAPPING = {
         "addr": "5a"
     },
 }
+NULL_VAL = 'N/A'
+TLV_ATTR_TYPE_MODEL = 2
+TLV_ATTR_TYPE_SERIAL = 5
 
 
 class Fan(FanBase):
@@ -147,10 +151,17 @@ class Fan(FanBase):
             chip = self.emc2305_chip_mapping[self.fan_index]
             device = chip['device']
             fan_index = chip['index_map']
-            sysfs_path = "%s%s/%s" % (
-                EMC2305_PATH, device, EMC2305_FAN_TARGET)
-            sysfs_path = sysfs_path.format(fan_index[self.fan_tray_index])
-            raw = self._api_common.read_txt_file(sysfs_path).strip('\r\n')
+
+            enable_path = "%s%s/%s" % (
+                EMC2305_PATH, device, EMC2305_FAN_PWM_MODE)
+            enable = self._api_common.read_txt_file(
+                enable_path.format(fan_index[self.fan_tray_index]))
+
+            target_mode = EMC2305_FAN_TARGET if enable != "0" else EMC2305_FAN_PWM
+            target_path = "%s%s/%s" % (EMC2305_PATH, device,
+                                       target_mode.format(fan_index[self.fan_tray_index]))
+
+            raw = self._api_common.read_txt_file(target_path)
             pwm = int(raw, 10) if raw else 0
             target = math.ceil(float(pwm) * 100 / EMC2305_MAX_PWM)
 
@@ -271,11 +282,7 @@ class Fan(FanBase):
         Returns:
             string: Model/part number of device
         """
-        if self.is_psu_fan:
-            return NULL_VAL
-
-        model = NULL_VAL
-        return model
+        return "N/A"
 
     def get_serial(self):
         """
@@ -283,11 +290,7 @@ class Fan(FanBase):
         Returns:
             string: Serial number of device
         """
-        if self.is_psu_fan:
-            return NULL_VAL
-
-        serial = NULL_VAL
-        return serial
+        return "N/A"
 
     def get_status(self):
         """

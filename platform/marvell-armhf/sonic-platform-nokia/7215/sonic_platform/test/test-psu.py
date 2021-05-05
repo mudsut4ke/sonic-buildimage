@@ -18,9 +18,8 @@ def main():
             print("        Presence: {}, Status: {}, LED: {}".format(psu.get_presence(),
                                                                      psu.get_status(),
                                                                      psu.get_status_led()))
-            print("        Model: {}, Serial#: {}, Part#: {}".format(psu.get_model(),
-                                                                     psu.get_serial(),
-                                                                     psu.get_part_number()))
+            print("        Model: {}, Serial#: {}".format(psu.get_model(),
+                                                                     psu.get_serial()))
             try:
                 current = psu.get_current()
             except NotImplementedError:

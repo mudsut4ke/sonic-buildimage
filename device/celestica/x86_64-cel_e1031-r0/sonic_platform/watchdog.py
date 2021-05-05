@@ -92,7 +92,7 @@ class Watchdog(WatchdogBase):
         """
         Turn off the watchdog timer
         """
-        return self._api_common.set_reg(self.setreg_path, self.cpld_info['wdt_en_reg'], self.cpld_info['wdt_dis_cmd')
+        return self._api_common.set_reg(self.setreg_path, self.cpld_info['wdt_en_reg'], self.cpld_info['wdt_dis_cmd'])
 
     def _keepalive(self):
         """
@@ -143,22 +143,22 @@ class Watchdog(WatchdogBase):
             An integer specifying the *actual* number of seconds the watchdog
             was armed with. On failure returns -1.
         """
-        ret= WDT_COMMON_ERROR
+        ret = WDT_COMMON_ERROR
 
         if seconds < 0 or seconds > 180:
             return ret
 
         try:
             if self.timeout != seconds:
-                self.timeout= self._settimeout(seconds)
+                self.timeout = self._settimeout(seconds)
 
             if self.armed:
                 self._keepalive()
             else:
                 self._enable()
-                self.armed= True
+                self.armed = True
 
-            ret= self.timeout
+            ret = self.timeout
             self.arm_timestamp = time.time()
         except IOError as e:
             print("Error: unable to enable wdt due to : {}".format(e))

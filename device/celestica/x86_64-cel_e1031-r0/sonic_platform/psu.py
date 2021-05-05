@@ -41,10 +41,10 @@ PSU_EEPROM_PATH = "/sys/bus/i2c/devices/{}-00{}/eeprom"
 class Psu(PsuBase):
     """Platform-specific Psu class"""
 
-    def _init_(self, psu_index):
-        PsuBase._init_(self)
-        self._api_common = Common()
+    def __init__(self, psu_index):
+        PsuBase.__init__(self)
 
+        self._api_common = Common()
         self.index = psu_index
         self.psu_presence = "psu{}_prs"
         self.psu_oper_status = "psu{}_status"
@@ -54,10 +54,9 @@ class Psu(PsuBase):
         self.eeprom_addr = PSU_EEPROM_PATH.format(
             self.i2c_num, PSU_I2C_MAPPING[self.index]["eeprom_addr"])
 
-        # for fan_index in range(0, PSU_NUM_FAN[self.index]):
-        #     fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
-        #     self._fan_list.append(fan)
-        # PsuBase._init_(self)
+        for fan_index in range(0, PSU_NUM_FAN[self.index]):
+            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
+            self._fan_list.append(fan)
 
     def _read_fru(self, path, attr_type):
         content = []

@@ -20,9 +20,7 @@ def main():
                                                                      fan.get_status_led()))
             print("        Model: {}, Serial#: {}".format(fan.get_model(),
                                                           fan.get_serial()))
-            print("        Part#: {}, Service Tag: {}".format(fan.get_part_number(),
-                                                              fan.get_service_tag()))
-            print("        Direction: {}, Speed: {}RPM, Target Speed: {}%\n".format(fan.get_direction(),
+            print("        Direction: {}, Speed: {}%, Target Speed: {}%\n".format(fan.get_direction(),
                                                                                     str(fan.get_speed()),
                                                                                     str(fan.get_target_speed())))
     return
