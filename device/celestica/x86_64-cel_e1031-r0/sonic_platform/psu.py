@@ -12,6 +12,7 @@ try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.fan import Fan
     from .common import Common
+    from .eeprom import DeviceEEPROM
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -36,6 +37,12 @@ PSU_I2C_MAPPING = {
 TLV_ATTR_TYPE_MODEL = 2
 TLV_ATTR_TYPE_SERIAL = 5
 PSU_EEPROM_PATH = "/sys/bus/i2c/devices/{}-00{}/eeprom"
+PSU_EEPROM_FORMAT = [
+    ('Serial Number', 's', 16), ('burn', 'x', 16),
+    ('Model', 's', 16),
+    ('Part Number', 's', 16),
+]
+PSU_EEPROM_START_OFFSET = 48
 
 
 class Psu(PsuBase):
@@ -58,31 +65,31 @@ class Psu(PsuBase):
             fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
             self._fan_list.append(fan)
 
-    def _read_fru(self, path, attr_type):
-        content = []
-        attr_idx = 0
-        attr_length = 0
+    # def _read_fru(self, path, attr_type):
+    #     content = []
+    #     attr_idx = 0
+    #     attr_length = 0
 
-        if(os.path.exists(path)):
-            with open(path, 'r', encoding='unicode_escape') as f:
-                content = f.read()
-            target_offset = ord(content[4])
-            target_offset *= 8  # spec defined: offset are in multiples of 8 bytes
+    #     if(os.path.exists(path)):
+    #         with open(path, 'r', encoding='unicode_escape') as f:
+    #             content = f.read()
 
-            attr_idx = target_offset + 3
-            for i in range(1, attr_type):
-                if attr_idx > len(content):
-                    raise SyntaxError
-                attr_length = (ord(content[attr_idx])) & (0x3f)
-                attr_idx += (attr_length + 1)
+    #         target_offset = ord(content[4])
+    #         target_offset *= 8  # spec defined: offset are in multiples of 8 bytes
+    #         attr_idx = target_offset + 3
+    #         for i in range(1, attr_type):
+    #             if attr_idx > len(content):
+    #                 raise SyntaxError
+    #             attr_length = (ord(content[attr_idx])) & (0x3f)
+    #             attr_idx += (attr_length + 1)
 
-            attr_length = (ord(content[attr_idx])) & (0x3f)
-            attr_idx += 1
-        else:
-            print("[PSU] Can't find path to eeprom : %s" % path)
-            return SyntaxError
+    #         attr_length = (ord(content[attr_idx])) & (0x3f)
+    #         attr_idx += 1
+    #     else:
+    #         print("[PSU] Can't find path to eeprom : %s" % path)
+    #         return SyntaxError
 
-        return content[attr_idx:attr_idx + attr_length]
+    #     return content[attr_idx:attr_idx + attr_length]
 
     def _search_file_by_contain(self, directory, search_str, file_start):
         for dirpath, dirnames, files in os.walk(directory):
@@ -230,10 +237,9 @@ class Psu(PsuBase):
         Returns:
             string: Model/part number of device
         """
-        model = self._read_fru(self.eeprom_addr, TLV_ATTR_TYPE_MODEL)
-        if not model:
-            return "N/A"
-        return model
+        self._eeprom = DeviceEEPROM(
+            self.eeprom_addr, PSU_EEPROM_FORMAT, PSU_EEPROM_START_OFFSET)
+        return self._eeprom.model_str
 
     def get_serial(self):
         """
@@ -241,10 +247,9 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        serial = self._read_fru(self.eeprom_addr, TLV_ATTR_TYPE_SERIAL)
-        if not serial:
-            return "N/A"
-        return serial
+        self._eeprom = DeviceEEPROM(
+            self.eeprom_addr, PSU_EEPROM_FORMAT, PSU_EEPROM_START_OFFSET)
+        return self._eeprom.serial_number
 
     def get_position_in_parent(self):
         """

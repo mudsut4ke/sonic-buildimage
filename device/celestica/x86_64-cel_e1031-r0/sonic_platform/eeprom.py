@@ -18,6 +18,7 @@ try:
         from cStringIO import StringIO
 
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
+    from sonic_platform_base.sonic_eeprom.eeprom_base import EepromDecoder
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -139,3 +140,60 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_mac(self):
         return self._eeprom.get('0x24', NULL)
+
+
+class DeviceEEPROM(eeprom_tlvinfo.TlvInfoDecoder):
+
+    def __init__(self, eeprom_path, device_format, start_offset):
+        # Decode device eeprom as per specified format
+        self.format = device_format
+        self.start_offset = start_offset
+
+        EepromDecoder.__init__(self, eeprom_path, self.format,
+                               self.start_offset, '', True)
+        self._load_device_eeprom()
+
+    def _load_device_eeprom(self):
+        """
+        Reads the Fan/PSU EEPROM and interprets as per the specified format
+        """
+        self.serial_number = 'NA'
+        self.model_str = 'NA'
+
+        # device eeproms use proprietary format
+        try:
+            # Read Fan/PSU EEPROM as per the specified format.
+            self.eeprom_data = EepromDecoder.read_eeprom(self)
+        except Exception as e:
+            return
+
+        if self.eeprom_data[0] == 255:
+            return
+
+        (valid, data) = self._get_eeprom_field("Model")
+        if valid:
+            self.model_str = data.decode()
+
+        try:
+            (valid, data) = self._get_eeprom_field("Serial Number")
+            if valid:
+                self.serial_number = data.decode()
+        except Exception as e:
+            return
+
+    def _get_eeprom_field(self, field_name, decode=False):
+        """
+        For a field name specified in the EEPROM format, returns the
+        presence of the field and the value for the same.
+        """
+        field_start = 0
+        for field in self.format:
+            field_end = field_start + field[2]
+            if field[0] == field_name:
+                if decode:
+                    return (True, self.eeprom_data[field_start:field_end].decode('ascii'))
+                else:
+                    return (True, self.eeprom_data[field_start:field_end])
+            field_start = field_end
+
+        return (False, None)
