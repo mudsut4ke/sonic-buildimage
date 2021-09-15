@@ -11,13 +11,13 @@ setup(
     author='SONiC Team',
     author_email='linuxnetdev@microsoft.com',
     url='https://github.com/Azure/sonic-buildimage',
-    maintainer='Larry Ming',
-    maintainer_email='laming@celestica.com',
+    maintainer='Wirut Getbamrung',
+    maintainer_email='wgetbumr@celestica.com',
     packages=[
         'sonic_platform',
     ],
     package_dir={
-        'sonic_platform': '../device/sonic_platform'},
+        'sonic_platform': '../../../../device/{}/{}/sonic_platform'.format(DEVICE_NAME, HW_SKU)},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Plugins',
