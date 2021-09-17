@@ -438,6 +438,36 @@ module_param(bus_clock_master_13, int, 0660);
 MODULE_PARM_DESC(bus_clock_master_13, 
 		"I2C master 13 bus speed in KHz 50/80/100/200/400");
 
+static int bus_clock_master_14 = 100;
+module_param(bus_clock_master_14, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_14, 
+		"I2C master 14 bus speed in KHz 50/80/100/200/400");
+
+static int bus_clock_master_15 = 100;
+module_param(bus_clock_master_15, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_15, 
+		"I2C master 15 bus speed in KHz 50/80/100/200/400");
+
+static int bus_clock_master_16 = 100;
+module_param(bus_clock_master_16, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_16, 
+		"I2C master 16 bus speed in KHz 50/80/100/200/400");
+
+static int bus_clock_master_17 = 100;
+module_param(bus_clock_master_17, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_17, 
+		"I2C master 17 bus speed in KHz 50/80/100/200/400");
+
+static int bus_clock_master_18 = 100;
+module_param(bus_clock_master_18, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_18, 
+		"I2C master 18 bus speed in KHz 50/80/100/200/400");
+
+static int bus_clock_master_19 = 100;
+module_param(bus_clock_master_19, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_19, 
+		"I2C master 19 bus speed in KHz 50/80/100/200/400");
+
 /* RESOURCE SEPERATES BY FUNCTION */
 /* Resource IOMEM for i2c bus 1 for SFP1*/
 static struct resource  cls_i2c_res_1[] = {
@@ -525,6 +555,48 @@ static struct resource  cls_i2c_res_13[] = {
 		.flags = IORESOURCE_MEM,}, 
 };
 
+/* Resource IOMEM for i2c bus 14 for ...*/
+static struct resource  cls_i2c_res_14[] = {
+	{
+		.start = 0x9A0, .end = 0x9BF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for i2c bus 15 for ...*/
+static struct resource  cls_i2c_res_15[] = {
+	{
+		.start = 0x9C0, .end = 0x9DF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for i2c bus 16 for ...*/
+static struct resource  cls_i2c_res_16[] = {
+	{
+		.start = 0x9E0, .end = 0x9FF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for i2c bus 17 for ...*/
+static struct resource  cls_i2c_res_17[] = {
+	{
+		.start = 0xA00, .end = 0xA1F,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for i2c bus 18 for ...*/
+static struct resource  cls_i2c_res_18[] = {
+	{
+		.start = 0xA20, .end = 0xA3F,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for i2c bus 19 for ...*/
+static struct resource  cls_i2c_res_19[] = {
+	{
+		.start = 0xA40, .end = 0xA5F,
+		.flags = IORESOURCE_MEM,}, 
+};
+
 /* Resource IOMEM for reg access */
 static struct resource reg_io_res[] = {
 	{       
@@ -554,9 +626,9 @@ static struct resource xcvr_res[] = {
  */
 static struct i2c_bus_config i2c_bus_configs[] = {
 	{
-		.id = 1,
-		.res = cls_i2c_res_1,
-		.num_res = ARRAY_SIZE(cls_i2c_res_1),
+		.id = 10,
+		.res = cls_i2c_res_10,
+		.num_res = ARRAY_SIZE(cls_i2c_res_10),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -568,9 +640,9 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 2,
-		.res = cls_i2c_res_2,
-		.num_res = ARRAY_SIZE(cls_i2c_res_2),
+		.id = 11,
+		.res = cls_i2c_res_11,
+		.num_res = ARRAY_SIZE(cls_i2c_res_11),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -582,9 +654,9 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 3,
-		.res = cls_i2c_res_3,
-		.num_res = ARRAY_SIZE(cls_i2c_res_3),
+		.id = 14,
+		.res = cls_i2c_res_14,
+		.num_res = ARRAY_SIZE(cls_i2c_res_14),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -596,9 +668,9 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 4,
-		.res = cls_i2c_res_4,
-		.num_res = ARRAY_SIZE(cls_i2c_res_4),
+		.id = 15,
+		.res = cls_i2c_res_15,
+		.num_res = ARRAY_SIZE(cls_i2c_res_15),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -610,9 +682,9 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 6,
-		.res = cls_i2c_res_6,
-		.num_res = ARRAY_SIZE(cls_i2c_res_6),
+		.id = 18,
+		.res = cls_i2c_res_18,
+		.num_res = ARRAY_SIZE(cls_i2c_res_18),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -624,9 +696,9 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 11, 
-		.res = cls_i2c_res_11, 
-		.num_res = ARRAY_SIZE(cls_i2c_res_11), 
+		.id = 19,
+		.res = cls_i2c_res_19,
+		.num_res = ARRAY_SIZE(cls_i2c_res_19),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -843,6 +915,24 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 				break;
 			case 13:
 				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_13;
+				break;
+			case 14:
+				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_14;
+				break;
+			case 15:
+				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_15;
+				break;
+			case 16:
+				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_16;
+				break;
+			case 17:
+				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_17;
+				break;
+			case 18:
+				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_18;
+				break;
+			case 19:
+				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_19;
 				break;
 			default:
 				i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
