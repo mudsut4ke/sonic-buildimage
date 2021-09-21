@@ -24,7 +24,7 @@ start)
         modprobe cls-i2c-ocores
         modprobe cls-fpga
         modprobe xcvr-cls
-        # modprobe switch_cpld
+        modprobe switch_cpld
         modprobe i2c-mux-pca954x force_deselect_on_exit=1
 
         # Instantiate TLV EEPROM device on I801 bus
