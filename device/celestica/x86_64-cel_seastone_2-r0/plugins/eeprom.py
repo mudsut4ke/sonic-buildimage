@@ -1,5 +1,5 @@
 #############################################################################
-# Celestica Seastone2
+# Celestica Blackstone
 #
 # Platform and model specific eeprom subclass, inherits from the base class,
 # and provides the followings:
