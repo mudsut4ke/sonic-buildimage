@@ -592,6 +592,20 @@ static struct resource xcvr_res[] = {
 static struct i2c_bus_config i2c_bus_configs[] = {
 	{
 		.id = 6,
+		.res = cls_i2c_res_6,
+		.num_res = ARRAY_SIZE(cls_i2c_res_6),
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 10,
 		.res = cls_i2c_res_10,
 		.num_res = ARRAY_SIZE(cls_i2c_res_10),
 		.pdata = {
@@ -605,7 +619,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 10,
+		.id = 11,
 		.res = cls_i2c_res_11,
 		.num_res = ARRAY_SIZE(cls_i2c_res_11),
 		.pdata = {
@@ -619,23 +633,9 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 11,
-		.res = cls_i2c_res_14,
-		.num_res = ARRAY_SIZE(cls_i2c_res_14),
-		.pdata = {
-			.reg_shift = OCORE_REGSHIFT,
-			.reg_io_width = OCORE_REG_IO_WIDTH,
-			.clock_khz = OCORE_IP_CLK_khz,
-			.bus_khz = OCORE_BUS_CLK_khz,
-			.big_endian = false,
-			.num_devices = 0,
-			.devices = NULL,
-		},
-	},
-	{
 		.id = 12,
-		.res = cls_i2c_res_15,
-		.num_res = ARRAY_SIZE(cls_i2c_res_15),
+		.res = cls_i2c_res_12,
+		.num_res = ARRAY_SIZE(cls_i2c_res_12),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -648,8 +648,8 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 	},
 	{
 		.id = 13,
-		.res = cls_i2c_res_18,
-		.num_res = ARRAY_SIZE(cls_i2c_res_18),
+		.res = cls_i2c_res_13,
+		.num_res = ARRAY_SIZE(cls_i2c_res_13),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
@@ -662,8 +662,8 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 	},
 	{
 		.id = 14,
-		.res = cls_i2c_res_19,
-		.num_res = ARRAY_SIZE(cls_i2c_res_19),
+		.res = cls_i2c_res_14,
+		.num_res = ARRAY_SIZE(cls_i2c_res_14),
 		.pdata = {
 			.reg_shift = OCORE_REGSHIFT,
 			.reg_io_width = OCORE_REG_IO_WIDTH,
