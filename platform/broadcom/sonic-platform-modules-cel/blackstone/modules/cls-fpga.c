@@ -469,131 +469,96 @@ MODULE_PARM_DESC(bus_clock_master_19,
 		"I2C master 19 bus speed in KHz 50/80/100/200/400");
 
 /* RESOURCE SEPERATES BY FUNCTION */
-/* Resource IOMEM for i2c bus 1 for SFP1*/
+/* Resource IOMEM for i2c bus 1 for FPGA_BMC_I2C1*/
 static struct resource  cls_i2c_res_1[] = {
 	{
 		.start = 0x800, .end = 0x81F,
 		.flags = IORESOURCE_MEM,}, 
 };
-/* Resource IOMEM for i2c bus 2 for SFP2*/
+/* Resource IOMEM for i2c bus 2 for FPGA_BMC_I2C2*/
 static struct resource  cls_i2c_res_2[] = {
 	{
 		.start = 0x820, .end = 0x83F,
 		.flags = IORESOURCE_MEM,}, 
 };
-/* Resource IOMEM for i2c bus 3 for PCA9548*/
+/* Resource IOMEM for i2c bus 3 for FPGA_BMC_I2C3*/
 static struct resource  cls_i2c_res_3[] = {
 	{
 		.start = 0x840, .end = 0x85F,
 		.flags = IORESOURCE_MEM,}, 
 };
-/* Resource IOMEM for i2c bus 4 for MISC CPLD1/CPLD2*/		
+/* Resource IOMEM for i2c bus 4 for FPGA_BMC_I2C4*/
 static struct resource  cls_i2c_res_4[] = {
 	{
 		.start = 0x860, .end = 0x87F,
 		.flags = IORESOURCE_MEM,}, 
 };	
-/* Resource IOMEM for i2c bus 5 for SYS CPLD*/	
+/* Resource IOMEM for i2c bus 5 for FPGA_BMC_I2C5*/
 static struct resource  cls_i2c_res_5[] = {
 	{
 		.start = 0x880, .end = 0x89F,
 		.flags = IORESOURCE_MEM,}, 
 };
-/* Resource IOMEM for i2c bus 6 for PCA9548*/	
+/* Resource IOMEM for i2c bus 6 for FPGA_SW_PORT_I2C0*/
 static struct resource  cls_i2c_res_6[] = {
 	{
 		.start = 0x8A0, .end = 0x8BF,
 		.flags = IORESOURCE_MEM,}, 
 };	
 
-/* Resource IOMEM for i2c bus 7 for PSU*/	
+/* Resource IOMEM for i2c bus 7 for FPGA_BMC_I2C7*/
 static struct resource  cls_i2c_res_7[] = {
 	{
 		.start = 0x8C0, .end = 0x8DF,
 		.flags = IORESOURCE_MEM,}, 
 };	
 
-/* Resource IOMEM for i2c bus 8 for FAN*/	
+/* Resource IOMEM for i2c bus 8 for FPGA_BMC_I2C8*/
 static struct resource  cls_i2c_res_8[] = {
 	{
 		.start = 0x8E0, .end = 0x8FF,
 		.flags = IORESOURCE_MEM,}, 
 };	
 
-/* Resource IOMEM for i2c bus 9 for PCA9548*/	
+/* Resource IOMEM for i2c bus 9 for FPGA_BMC_I2C9*/
 static struct resource  cls_i2c_res_9[] = {
 	{
 		.start = 0x900, .end = 0x91F,
 		.flags = IORESOURCE_MEM,}, 
 };	
 
-/* Resource IOMEM for i2c bus 10 for LM75B*/	
+/* Resource IOMEM for i2c bus 10 for MISC_CPLD1_I2C*/
 static struct resource  cls_i2c_res_10[] = {
 	{
 		.start = 0x920, .end = 0x93F,
 		.flags = IORESOURCE_MEM,}, 
 };	
 
-/* Resource IOMEM for i2c bus 11 for si5395B*/
+/* Resource IOMEM for i2c bus 11 for MISC_CPLD2_I2C*/
 static struct resource  cls_i2c_res_11[] = {
 	{
 		.start = 0x940, .end = 0x95F,
 		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 12 for EEPROM, PCIE CLK BUF*/	
+/* Resource IOMEM for i2c bus 12 for FPGA_SW_PORT_I2C1*/
 static struct resource  cls_i2c_res_12[] = {
 	{
 		.start = 0x960, .end = 0x97F,
 		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 13 for VDDCORE_12V_DCDC*/
+/* Resource IOMEM for i2c bus 13 for FPGA_SFPP_0_I2C*/
 static struct resource  cls_i2c_res_13[] = {
 	{
 		.start = 0x980, .end = 0x99F,
 		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 14 for ...*/
+/* Resource IOMEM for i2c bus 14 for FPGA_SFPP_1_I2C*/
 static struct resource  cls_i2c_res_14[] = {
 	{
 		.start = 0x9A0, .end = 0x9BF,
-		.flags = IORESOURCE_MEM,}, 
-};
-
-/* Resource IOMEM for i2c bus 15 for ...*/
-static struct resource  cls_i2c_res_15[] = {
-	{
-		.start = 0x9C0, .end = 0x9DF,
-		.flags = IORESOURCE_MEM,}, 
-};
-
-/* Resource IOMEM for i2c bus 16 for ...*/
-static struct resource  cls_i2c_res_16[] = {
-	{
-		.start = 0x9E0, .end = 0x9FF,
-		.flags = IORESOURCE_MEM,}, 
-};
-
-/* Resource IOMEM for i2c bus 17 for ...*/
-static struct resource  cls_i2c_res_17[] = {
-	{
-		.start = 0xA00, .end = 0xA1F,
-		.flags = IORESOURCE_MEM,}, 
-};
-
-/* Resource IOMEM for i2c bus 18 for ...*/
-static struct resource  cls_i2c_res_18[] = {
-	{
-		.start = 0xA20, .end = 0xA3F,
-		.flags = IORESOURCE_MEM,}, 
-};
-
-/* Resource IOMEM for i2c bus 19 for ...*/
-static struct resource  cls_i2c_res_19[] = {
-	{
-		.start = 0xA40, .end = 0xA5F,
 		.flags = IORESOURCE_MEM,}, 
 };
 
@@ -626,7 +591,7 @@ static struct resource xcvr_res[] = {
  */
 static struct i2c_bus_config i2c_bus_configs[] = {
 	{
-		.id = 10,
+		.id = 6,
 		.res = cls_i2c_res_10,
 		.num_res = ARRAY_SIZE(cls_i2c_res_10),
 		.pdata = {
@@ -640,7 +605,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 11,
+		.id = 10,
 		.res = cls_i2c_res_11,
 		.num_res = ARRAY_SIZE(cls_i2c_res_11),
 		.pdata = {
@@ -654,7 +619,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 14,
+		.id = 11,
 		.res = cls_i2c_res_14,
 		.num_res = ARRAY_SIZE(cls_i2c_res_14),
 		.pdata = {
@@ -668,7 +633,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 15,
+		.id = 12,
 		.res = cls_i2c_res_15,
 		.num_res = ARRAY_SIZE(cls_i2c_res_15),
 		.pdata = {
@@ -682,7 +647,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 18,
+		.id = 13,
 		.res = cls_i2c_res_18,
 		.num_res = ARRAY_SIZE(cls_i2c_res_18),
 		.pdata = {
@@ -696,7 +661,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 		},
 	},
 	{
-		.id = 19,
+		.id = 14,
 		.res = cls_i2c_res_19,
 		.num_res = ARRAY_SIZE(cls_i2c_res_19),
 		.pdata = {
