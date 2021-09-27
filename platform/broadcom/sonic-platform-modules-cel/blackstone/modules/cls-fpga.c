@@ -443,31 +443,6 @@ module_param(bus_clock_master_14, int, 0660);
 MODULE_PARM_DESC(bus_clock_master_14, 
 		"I2C master 14 bus speed in KHz 50/80/100/200/400");
 
-static int bus_clock_master_15 = 100;
-module_param(bus_clock_master_15, int, 0660);
-MODULE_PARM_DESC(bus_clock_master_15, 
-		"I2C master 15 bus speed in KHz 50/80/100/200/400");
-
-static int bus_clock_master_16 = 100;
-module_param(bus_clock_master_16, int, 0660);
-MODULE_PARM_DESC(bus_clock_master_16, 
-		"I2C master 16 bus speed in KHz 50/80/100/200/400");
-
-static int bus_clock_master_17 = 100;
-module_param(bus_clock_master_17, int, 0660);
-MODULE_PARM_DESC(bus_clock_master_17, 
-		"I2C master 17 bus speed in KHz 50/80/100/200/400");
-
-static int bus_clock_master_18 = 100;
-module_param(bus_clock_master_18, int, 0660);
-MODULE_PARM_DESC(bus_clock_master_18, 
-		"I2C master 18 bus speed in KHz 50/80/100/200/400");
-
-static int bus_clock_master_19 = 100;
-module_param(bus_clock_master_19, int, 0660);
-MODULE_PARM_DESC(bus_clock_master_19, 
-		"I2C master 19 bus speed in KHz 50/80/100/200/400");
-
 /* RESOURCE SEPERATES BY FUNCTION */
 /* Resource IOMEM for i2c bus 1 for FPGA_BMC_I2C1*/
 static struct resource  cls_i2c_res_1[] = {
@@ -883,21 +858,6 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 				break;
 			case 14:
 				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_14;
-				break;
-			case 15:
-				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_15;
-				break;
-			case 16:
-				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_16;
-				break;
-			case 17:
-				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_17;
-				break;
-			case 18:
-				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_18;
-				break;
-			case 19:
-				i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_19;
 				break;
 			default:
 				i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
