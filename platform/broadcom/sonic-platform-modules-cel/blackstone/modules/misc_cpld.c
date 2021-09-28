@@ -257,7 +257,7 @@ static int misc_cpld_probe(struct i2c_client *client,
                              const struct i2c_device_id *id)
 {
         int err;
-        struct misc_cpld_data *drvdata1, *drvdata2;
+        struct misc_cpld_data *drvdata1;
         struct device *hwmon_dev1;
 
         if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C))
@@ -310,8 +310,6 @@ exit:
 
 static int misc_cpld_remove(struct i2c_client *client)
 {
-        struct misc_cpld_data *data = i2c_get_clientdata(client);
-
         sysfs_remove_group(&client->dev.kobj, &sff_led_groups);
         sysfs_remove_link(&client->dev.kobj, "MISC_CPLD");
         return 0;
