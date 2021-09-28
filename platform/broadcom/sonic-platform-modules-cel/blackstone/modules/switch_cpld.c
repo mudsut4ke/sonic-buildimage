@@ -2,8 +2,6 @@
  * switch_cpld.c - i2c driver for Blackstone DP switchboard CPLD1/CPLD2
  * provides sysfs interfaces to access CPLD register and control port LEDs
  *
- * Author: Budsakol Sirirattanasakul
- *
  * Copyright (C) 2021 Celestica Corp.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,7 +28,7 @@
 struct switch_cpld_data {
         struct mutex lock;
         struct i2c_client *client;
-        struct i2c_client *client2;
+        // struct i2c_client *client2;
         uint8_t read_addr;
 };
 
@@ -142,15 +140,15 @@ static ssize_t port_led_mode_show(struct device *dev,
         int led_mode_1, led_mode_2;
         struct switch_cpld_data *data = dev_get_drvdata(dev);
         struct i2c_client *client1 = data->client;
-        struct i2c_client *client2 = data->client2;
+        // struct i2c_client *client2 = data->client2;
 
         led_mode_1 = i2c_smbus_read_byte_data(client1, LED_OPMODE);
         if (led_mode_1 < 0)
                 return led_mode_1;
 
-        led_mode_2 = i2c_smbus_read_byte_data(client2, LED_OPMODE);
-        if (led_mode_2 < 0)
-                return led_mode_2;
+        // led_mode_2 = i2c_smbus_read_byte_data(client2, LED_OPMODE);
+        // if (led_mode_2 < 0)
+        //         return led_mode_2;
 
         return sprintf(buf, "%s %s\n",
                        led_mode_1 ? "test" : "normal",
@@ -165,7 +163,7 @@ static ssize_t port_led_mode_store(struct device *dev,
         uint8_t led_mode;
         struct switch_cpld_data *data = dev_get_drvdata(dev);
         struct i2c_client *client1 = data->client;
-        struct i2c_client *client2 = data->client2;
+        // struct i2c_client *client2 = data->client2;
 
         if (sysfs_streq(buf, "test"))
                 led_mode = 0x01;
@@ -179,10 +177,10 @@ static ssize_t port_led_mode_store(struct device *dev,
                 return status;
         }
 
-        status = i2c_smbus_write_byte_data(client2, LED_OPMODE, led_mode);
-        if (status != 0) {
-                return status;
-        }
+        // status = i2c_smbus_write_byte_data(client2, LED_OPMODE, led_mode);
+        // if (status != 0) {
+        //         return status;
+        // }
 
         return size;
 }
@@ -193,15 +191,15 @@ static ssize_t port_led_color_show(struct device *dev,
         int led_color1, led_color2;
         struct switch_cpld_data *data = dev_get_drvdata(dev);
         struct i2c_client *client1 = data->client;
-        struct i2c_client *client2 = data->client2;
+        // struct i2c_client *client2 = data->client2;
 
         led_color1 = i2c_smbus_read_byte_data(client1, LED_TEST);
         if (led_color1 < 0)
                 return led_color1;
 
-        led_color2 = i2c_smbus_read_byte_data(client2, LED_TEST);
-        if (led_color2 < 0)
-                return led_color2;
+        // led_color2 = i2c_smbus_read_byte_data(client2, LED_TEST);
+        // if (led_color2 < 0)
+        //         return led_color2;
 
         return sprintf(buf, "%s %s\n",
                        led_color1 == 0x02 ? "green" :
@@ -224,7 +222,7 @@ static ssize_t port_led_color_store(struct device *dev,
         uint8_t led_color1, led_color2;
         struct switch_cpld_data *data = dev_get_drvdata(dev);
         struct i2c_client *client1 = data->client;
-        struct i2c_client *client2 = data->client2;
+        // struct i2c_client *client2 = data->client2;
 
         if (sysfs_streq(buf, "off")) {
                 led_color1 = 0x07;
@@ -259,10 +257,10 @@ static ssize_t port_led_color_store(struct device *dev,
                 return status;
         }
 
-        status = i2c_smbus_write_byte_data(client2, LED_TEST, led_color2);
-        if (status != 0) {
-                return status;
-        }
+        // status = i2c_smbus_write_byte_data(client2, LED_TEST, led_color2);
+        // if (status != 0) {
+        //         return status;
+        // }
 
         return size;
 }
@@ -286,14 +284,14 @@ static int switch_cpld_probe(struct i2c_client *client,
         int err;
         struct switch_cpld_data *drvdata1, *drvdata2;
         struct device *hwmon_dev1, *hwmon_dev2;
-        struct i2c_client *client2;
+        // struct i2c_client *client2;
 
-        if (client->addr != CPLD1_ADDR) {
-                dev_err(&client->dev, "probe, bad i2c addr: 0x%x\n",
-                        client->addr);
-                err = -EINVAL;
-                goto exit;
-        }
+        // if (client->addr != CPLD1_ADDR) {
+        //         dev_err(&client->dev, "probe, bad i2c addr: 0x%x\n",
+        //                 client->addr);
+        //         err = -EINVAL;
+        //         goto exit;
+        // }
 
         if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C))
                 return -EPFNOSUPPORT;
@@ -326,63 +324,64 @@ static int switch_cpld_probe(struct i2c_client *client,
                 goto exit;
         }
 
-        /* CPLD2 */
-        drvdata2 = devm_kzalloc(&client->dev,
-                                sizeof(struct switch_cpld_data), GFP_KERNEL);
+        // /* CPLD2 */
+        // drvdata2 = devm_kzalloc(&client->dev,
+        //                         sizeof(struct switch_cpld_data), GFP_KERNEL);
 
-        if (!drvdata2) {
-                err = -ENOMEM;
-                goto err_link;
-        }
+        // if (!drvdata2) {
+        //         err = -ENOMEM;
+        //         goto err_link;
+        // }
 
-        client2 = i2c_new_dummy(client->adapter, CPLD2_ADDR);
-        if (!client2) {
-                dev_err(&client->dev, "address 0x%02x unavailable\n",
-                        CPLD2_ADDR);
-                err = -EADDRINUSE;
-                goto err_link;
-        }
+        // client2 = i2c_new_dummy(client->adapter, CPLD2_ADDR);
+        // if (!client2) {
+        //         dev_err(&client->dev, "address 0x%02x unavailable\n",
+        //                 CPLD2_ADDR);
+        //         err = -EADDRINUSE;
+        //         goto err_link;
+        // }
 
-        mutex_init(&drvdata2->lock);
-        drvdata2->read_addr = 0x00;
-        drvdata2->client = client2;
-        i2c_set_clientdata(client2, drvdata2);
+        // mutex_init(&drvdata2->lock);
+        // drvdata2->read_addr = 0x00;
+        // drvdata2->client = client2;
+        // i2c_set_clientdata(client2, drvdata2);
 
-        /* attach client2 to be client2 of CPLD1
-           for later use on port led sysfs */
-        drvdata1->client2 = client2;
+        // /* attach client2 to be client2 of CPLD1
+        //    for later use on port led sysfs */
+        // drvdata1->client2 = client2;
 
-        hwmon_dev2 = devm_hwmon_device_register_with_groups(&client2->dev,
-                        "CPLD2",
-                        drvdata2,
-                        switch_cpld_groups);
+        // hwmon_dev2 = devm_hwmon_device_register_with_groups(&client2->dev,
+        //                 "CPLD2",
+        //                 drvdata2,
+        //                 switch_cpld_groups);
 
-        if (IS_ERR(hwmon_dev2)) {
-                err = PTR_ERR(hwmon_dev2);
-                goto err_client2;
-        }
+        // if (IS_ERR(hwmon_dev2)) {
+        //         err = PTR_ERR(hwmon_dev2);
+        //         goto err_client2;
+        // }
 
-        err = sysfs_create_link(&client->dev.kobj, &hwmon_dev2->kobj, "CPLD2");
-        if (err) {
-                goto err_client2;
-        }
+        // err = sysfs_create_link(&client->dev.kobj, &hwmon_dev2->kobj, "CPLD2");
+        // if (err) {
+        //         goto err_client2;
+        // }
 
         //port led
         err = sysfs_create_group(&client->dev.kobj, &sff_led_groups);
         if (err) {
                 dev_err(&client->dev,
                         "failed to create sysfs attribute group.\n");
-                goto err_link2;
+                // goto err_link2;
+                goto err_link;
         }
 
         return 0;
 
-err_link2:
-        sysfs_remove_link(&client->dev.kobj, "CPLD2");
+// err_link2:
+//         sysfs_remove_link(&client->dev.kobj, "CPLD2");
 
-err_client2:
-        if (client2)
-                i2c_unregister_device(client2);
+// err_client2:
+//         if (client2)
+//                 i2c_unregister_device(client2);
 
 err_link:
         sysfs_remove_link(&client->dev.kobj, "CPLD1");
@@ -397,9 +396,9 @@ static int switch_cpld_remove(struct i2c_client *client)
         struct switch_cpld_data *data = i2c_get_clientdata(client);
 
         sysfs_remove_group(&client->dev.kobj, &sff_led_groups);
-        sysfs_remove_link(&data->client->dev.kobj, "CPLD2");
+        // sysfs_remove_link(&data->client->dev.kobj, "CPLD2");
         sysfs_remove_link(&client->dev.kobj, "CPLD1");
-        i2c_unregister_device(data->client2);
+        // i2c_unregister_device(data->client2);
         return 0;
 }
 
@@ -423,6 +422,7 @@ static struct i2c_driver switch_cpld_driver = {
 module_i2c_driver(switch_cpld_driver);
 
 MODULE_AUTHOR("Budsakol Sirirattanasakul<bsirir@celestica.com>");
+MODULE_AUTHOR("Wirut Getbamrung<wgetbumr@celestica.com>");
 MODULE_DESCRIPTION("Celestica Blackstone Switchboard CPLD driver");
 MODULE_VERSION("1.0.0");
 MODULE_LICENSE("GPL");
