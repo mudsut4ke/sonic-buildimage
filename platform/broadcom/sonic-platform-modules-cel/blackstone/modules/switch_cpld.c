@@ -15,18 +15,18 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/i2c.h>
-#include <linux/mutex.h>
+// #include <linux/mutex.h>
 #include <linux/hwmon.h>
 
 #define CPLD1_ADDR      0x30
-#define CPLD2_ADDR      0x31
+// #define CPLD2_ADDR      0x31
 
 #define SCRATCH_ADDR    0x01
 #define LED_OPMODE      0x09
 #define LED_TEST        0x0A
 
 struct switch_cpld_data {
-        struct mutex lock;
+        // struct mutex lock;
         struct i2c_client *client;
         // struct i2c_client *client2;
         uint8_t read_addr;
@@ -283,7 +283,7 @@ static int switch_cpld_probe(struct i2c_client *client,
 {
         int err;
         struct switch_cpld_data *drvdata1, *drvdata2;
-        struct device *hwmon_dev1, *hwmon_dev2;
+        struct device *hwmon_dev1;//, *hwmon_dev2;
         // struct i2c_client *client2;
 
         // if (client->addr != CPLD1_ADDR) {
@@ -305,7 +305,7 @@ static int switch_cpld_probe(struct i2c_client *client,
                 goto exit;
         }
 
-        mutex_init(&drvdata1->lock);
+        // mutex_init(&drvdata1->lock);
         drvdata1->client = client;
         drvdata1->read_addr = 0x00;
         i2c_set_clientdata(client, drvdata1);
@@ -319,10 +319,10 @@ static int switch_cpld_probe(struct i2c_client *client,
                 goto exit;
         }
 
-        err = sysfs_create_link(&client->dev.kobj, &hwmon_dev1->kobj, "CPLD1");
-        if (err) {
-                goto exit;
-        }
+        // err = sysfs_create_link(&client->dev.kobj, &hwmon_dev1->kobj, "CPLD1");
+        // if (err) {
+        //         goto exit;
+        // }
 
         // /* CPLD2 */
         // drvdata2 = devm_kzalloc(&client->dev,
@@ -384,7 +384,7 @@ static int switch_cpld_probe(struct i2c_client *client,
 //                 i2c_unregister_device(client2);
 
 err_link:
-        sysfs_remove_link(&client->dev.kobj, "CPLD1");
+        sysfs_remove_link(&client->dev.kobj, "CPLD");
 
 exit:
         dev_err(&client->dev, "probe error %d\n", err);
@@ -397,13 +397,13 @@ static int switch_cpld_remove(struct i2c_client *client)
 
         sysfs_remove_group(&client->dev.kobj, &sff_led_groups);
         // sysfs_remove_link(&data->client->dev.kobj, "CPLD2");
-        sysfs_remove_link(&client->dev.kobj, "CPLD1");
+        sysfs_remove_link(&client->dev.kobj, "CPLD");
         // i2c_unregister_device(data->client2);
         return 0;
 }
 
 static const struct i2c_device_id switch_cpld_ids[] = {
-        { "switch_cpld", 0x30 },
+        { "switch_cpld", CPLD1_ADDR },
         { }
 };
 
