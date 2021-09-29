@@ -1,80 +1,75 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica Blackstone
 #
-# Platform and model specific psu subclass, inherits from the base class,
-# and provides the followings:
-# - psuutil numpsus
-# - psuutil status
+# Platform-specific PSU status interface for SONiC
+# provides the followings:
+# - Number of PSUs
+# - Operational status of PSUs
+# - Presence status of PSUs
 #############################################################################
 
-import os.path
-import subprocess
-import sys
-import re
-
 try:
+    import sys
+    import subprocess
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+# BMC IPMI config
+IPMI_RAW_COMMAND = "ipmitool raw"
+IPMI_SENSOR_NETFN = "0x04"
+IPMI_EVENT_CMD = "0x2b"
+IPMI_SENSOR_MAPPING = {
+    1: "9",
+    2: "10"
+}
+IPMI_PSU_PRESENCE_BIT = 0
+IPMI_PSU_FAILURE_BIT = 1
+IPMI_PSU_INPUT_LOST_BIT = 3
+
+# PSUs config
+NUM_OF_PSUS = 2
 
 
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
     def __init__(self):
-        self.ipmi_raw = "ipmitool raw 0x4 0x2d"
-        self.psu1_id = "0x2f"
-        self.psu2_id = "0x39"
         PsuBase.__init__(self)
 
-    def run_command(self, command):
-        proc = subprocess.Popen(command, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+    def _run_command(self, command):
+        proc = subprocess.Popen(
+            command, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
         (out, err) = proc.communicate()
-
         if proc.returncode != 0:
+            print("PSUutil Error: cannot get PSUs data from BMC")
             sys.exit(proc.returncode)
 
         return out
-
-    def find_value(self, in_string):
-        result = re.search("^.+ ([0-9a-f]{2}) .+$", in_string)
-        if result:
-            return result.group(1)
-        else:
-            return result
 
     def get_num_psus(self):
         """
         Retrieves the number of PSUs available on the device
         :return: An integer, the number of PSUs available on the device
         """
-        return 2
+        return NUM_OF_PSUS
 
     def get_psu_status(self, index):
         """
-        Retrieves the oprational status of power supply unit (PSU) defined
+        Retrieves the operational status of power supply unit (PSU) defined
                 by 1-based index <index>
         :param index: An integer, 1-based index of the PSU of which to query status
         :return: Boolean, True if PSU is operating properly, False if PSU is faulty
         """
-        if index is None:
-            return False
+        psu_status_cmd = " ".join(
+            [IPMI_RAW_COMMAND, IPMI_SENSOR_NETFN, IPMI_EVENT_CMD, IPMI_SENSOR_MAPPING.get(index)])
+        res = self._run_command(psu_status_cmd)
 
-        psu_id = self.psu1_id if index == 1 else self.psu2_id
-        res_string = self.run_command(self.ipmi_raw + " "  + psu_id)
-        status_byte = self.find_value(res_string)
+        status_byte = res.split()[1]
+        failure_detected = (int(status_byte, 16) >> IPMI_PSU_FAILURE_BIT) & 1
+        input_lost = (int(status_byte, 16) >> IPMI_PSU_INPUT_LOST_BIT) & 1
 
-        if status_byte is None:
-            return False
-
-        failure_detected = (int(status_byte, 16) >> 1) & 1
-        input_lost = (int(status_byte, 16) >> 3) & 1
-        if failure_detected or input_lost:
-            return False
-        else:
-            return True
+        return False if (failure_detected or input_lost) else True
 
     def get_psu_presence(self, index):
         """
@@ -83,18 +78,11 @@ class PsuUtil(PsuBase):
         :param index: An integer, 1-based index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
-        if index is None:
-            return False
+        psu_status_cmd = " ".join(
+            [IPMI_RAW_COMMAND, IPMI_SENSOR_NETFN, IPMI_EVENT_CMD, IPMI_SENSOR_MAPPING.get(index)])
 
-        psu_id = self.psu1_id if index == 1 else self.psu2_id
-        res_string = self.run_command(self.ipmi_raw + " "  + psu_id)
-        status_byte = self.find_value(res_string)
+        res = self._run_command(psu_status_cmd)
+        status_byte = res.split()[1]
+        presence = (int(status_byte, 16) >> IPMI_PSU_PRESENCE_BIT) & 1
 
-        if status_byte is None:
-            return False
-
-        presence = (int(status_byte, 16) >> 0) & 1
-        if presence:
-            return True
-        else:
-            return False
+        return presence or False
