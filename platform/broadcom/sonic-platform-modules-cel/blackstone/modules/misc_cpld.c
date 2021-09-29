@@ -18,8 +18,6 @@
 #include <linux/hwmon.h>
 
 #define CPLD1_ADDR      0x30
-// #define CPLD2_ADDR      0x31
-
 #define SCRATCH_ADDR    0x01
 #define LED_OPMODE      0x09
 #define LED_TEST        0x0A
@@ -263,7 +261,6 @@ static int misc_cpld_probe(struct i2c_client *client,
         if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C))
                 return -EPFNOSUPPORT;
 
-        /* CPLD1 */
         drvdata1 = devm_kzalloc(&client->dev,
                                 sizeof(struct misc_cpld_data), GFP_KERNEL);
 
