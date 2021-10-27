@@ -18,6 +18,7 @@
 #include <linux/hwmon.h>
 
 #define CPLD1_ADDR      0x30
+#define CPLD2_ADDR      0x31
 #define SCRATCH_ADDR    0x01
 #define LED_OPMODE      0x09
 #define LED_TEST        0x0A
@@ -25,6 +26,7 @@
 struct misc_cpld_data {
         struct i2c_client *client;
         uint8_t read_addr;
+        const char *link_name;
 };
 
 static ssize_t getreg_show(struct device *dev, struct device_attribute *attr,
@@ -256,7 +258,13 @@ static int misc_cpld_probe(struct i2c_client *client,
 {
         int err;
         struct misc_cpld_data *drvdata1;
-        struct device *hwmon_dev1;
+        struct device *hwmon_dev;
+        char *device_name;
+
+        device_name = "CPLD1";
+        if(id->driver_data == CPLD2_ADDR){
+                device_name = "CPLD2";
+        }
 
         if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C))
                 return -EPFNOSUPPORT;
@@ -271,18 +279,19 @@ static int misc_cpld_probe(struct i2c_client *client,
 
         drvdata1->client = client;
         drvdata1->read_addr = 0x00;
+        drvdata1->link_name = device_name;
         i2c_set_clientdata(client, drvdata1);
-        hwmon_dev1 = devm_hwmon_device_register_with_groups(&client->dev,
-                        "MISC_CPLD",
+        hwmon_dev = devm_hwmon_device_register_with_groups(&client->dev,
+                        device_name,
                         drvdata1,
                         misc_cpld_groups);
 
-        if (IS_ERR(hwmon_dev1)) {
-                err = PTR_ERR(hwmon_dev1);
+        if (IS_ERR(hwmon_dev)) {
+                err = PTR_ERR(hwmon_dev);
                 goto exit;
         }
 
-        err = sysfs_create_link(&client->dev.kobj, &hwmon_dev1->kobj, "MISC_CPLD");
+        err = sysfs_create_link(&client->dev.kobj, &hwmon_dev->kobj, device_name);
         if (err) {
                 goto exit;
         }
@@ -298,7 +307,7 @@ static int misc_cpld_probe(struct i2c_client *client,
         return 0;
 
 err_link:
-        sysfs_remove_link(&client->dev.kobj, "MISC_CPLD");
+        sysfs_remove_link(&client->dev.kobj, device_name);
 
 exit:
         dev_err(&client->dev, "probe error %d\n", err);
@@ -307,14 +316,18 @@ exit:
 
 static int misc_cpld_remove(struct i2c_client *client)
 {
+        struct misc_cpld_data *data = dev_get_drvdata(&client->dev);
+        char *device_name = data->link_name;
+
         sysfs_remove_group(&client->dev.kobj, &sff_led_groups);
-        sysfs_remove_link(&client->dev.kobj, "MISC_CPLD");
+        sysfs_remove_link(&client->dev.kobj, device_name);
         return 0;
 }
 
 static const struct i2c_device_id misc_cpld_ids[] = {
-        { "misc_cpld", CPLD1_ADDR },
-        { }
+        { "misc_cpld1", CPLD1_ADDR },
+        { "misc_cpld2", CPLD2_ADDR },
+        {}
 };
 
 MODULE_DEVICE_TABLE(i2c, misc_cpld_ids);
@@ -333,5 +346,5 @@ module_i2c_driver(misc_cpld_driver);
 
 MODULE_AUTHOR("Wirut Getbamrung<wgetbumr@celestica.com>");
 MODULE_DESCRIPTION("Celestica Blackstone MISC_CPLD driver");
-MODULE_VERSION("1.0.0");
+MODULE_VERSION("1.0.1");
 MODULE_LICENSE("GPL");
