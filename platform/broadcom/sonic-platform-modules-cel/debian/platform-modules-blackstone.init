@@ -37,8 +37,8 @@ start)
         decode-syseeprom --init 2> /dev/null &
 
         # Attach switchboard CPLD i2c device
-        echo misc_cpld 0x30 > /sys/bus/i2c/devices/i2c-2/new_device
-        echo misc_cpld 0x31 > /sys/bus/i2c/devices/i2c-3/new_device
+        echo misc_cpld1 0x30 > /sys/bus/i2c/devices/i2c-10/new_device
+        echo misc_cpld2 0x31 > /sys/bus/i2c/devices/i2c-11/new_device
 
         # Attach QSFP-DD i2c devices
         echo pca9548 0x70 > /sys/bus/i2c/devices/i2c-1/new_device
