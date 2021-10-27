@@ -346,5 +346,5 @@ module_i2c_driver(misc_cpld_driver);
 
 MODULE_AUTHOR("Wirut Getbamrung<wgetbumr@celestica.com>");
 MODULE_DESCRIPTION("Celestica Blackstone MISC_CPLD driver");
-MODULE_VERSION("1.0.0");
+MODULE_VERSION("1.0.1");
 MODULE_LICENSE("GPL");
