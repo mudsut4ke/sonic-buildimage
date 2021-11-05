@@ -9,73 +9,26 @@
 #############################################################################
 
 try:
-    from sonic_eeprom import eeprom_tlvinfo
-except ImportError as e:
-    raise ImportError(str(e) + "- required module not found")
-
-
-class board(eeprom_tlvinfo.TlvInfoDecoder):
-
-    def __init__(self, name, path, cpld_root, ro):
-        self.eeprom_path = "/sys/class/i2c-adapter/i2c-0/0-0056/eeprom"
-        super(board, self).__init__(self.eeprom_path, 0, '', True)
-
-try:
     import time
+    from os import path
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError("%s - required module not found" % str(e))
+    raise ImportError('%s - required module not found' % str(e))
 
 
 class SfpUtil(SfpUtilBase):
-    """Platform-specific SfpUtil class"""
+    '''Platform-specific SfpUtil class'''
 
     PORT_START = 1
-    PORT_END = 33
-    QSFP_PORT_START = 1
-    QSFP_PORT_END = 32
+    PORT_END = 32
 
-    EEPROM_OFFSET = 1
+    QSFPDD_PORT_START = 1
+    QSFPDD_PORT_END = 32
+    EEPROM_OFFSET = 15
+
     PORT_INFO_PATH = '/sys/devices/platform/cls-xcvr'
-
-    _port_name = ""
     _port_to_eeprom_mapping = {}
-    _port_to_i2cbus_mapping = {
-         1: 17,
-         2: 18,
-         3: 15,
-         4: 16,
-         5: 21,
-         6: 20,
-         7: 38,
-         8: 19,
-         9: 35,
-        10: 34,
-        11: 37,
-        12: 33,
-        13: 32,
-        14: 36,
-        15: 22,
-        16: 31,
-        17: 24,
-        18: 30,
-        19: 27,
-        20: 23,
-        21: 28,
-        22: 25,
-        23: 12,
-        24: 29,
-        25: 26,
-        26: 13,
-        27: 7,
-        28: 14,
-        29: 9,
-        30: 11,
-        31: 10,
-        32: 8,
-        33: 1,
-        34: 2
-    }
+    _port_to_i2cbus_mapping = {}
 
     @property
     def port_start(self):
@@ -86,12 +39,8 @@ class SfpUtil(SfpUtilBase):
         return self.PORT_END
 
     @property
-    def qsfp_ports(self):
-        return []
-
-    @property
     def osfp_ports(self):
-        return list(range(self.QSFP_PORT_START, self.QSFP_PORT_END + 1))
+        return list(range(self.QSFPDD_PORT_START, self.QSFPDD_PORT_END + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -102,27 +51,35 @@ class SfpUtil(SfpUtilBase):
         return self._port_to_i2cbus_mapping
 
     def get_port_name(self, port_num):
-        if port_num in self.osfp_ports:
-            self._port_name = "QSFPDD" + str(port_num - self.QSFP_PORT_START + 1)
-        else:
-            self._port_name = "SFP" + str(port_num)
-        return self._port_name
-
-    # def get_eeprom_dom_raw(self, port_num):
-    #     if port_num in self.osfp_ports:
-    #         # QSFP DOM EEPROM is also at addr 0x50 and thus also stored in eeprom_ifraw
-    #         return None
-    #     else:
-    #         # Read dom eeprom at addr 0x51
-    #         return self._read_eeprom_devid(port_num, self.DOM_EEPROM_ADDR, 256)
+        return 'QSFPDD{}'.format(port_num) if port_num in self.osfp_ports else 'SFP+{}' + str(port_num - self.QSFPDD_PORT_END)
 
     def __init__(self):
         # Override port_to_eeprom_mapping for class initialization
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
 
         for x in range(self.PORT_START, self.PORT_END+1):
-            self.port_to_eeprom_mapping[x] = eeprom_path.format(self.port_to_i2cbus_mapping[x])
+            self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET) - 1
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(
+                self.port_to_i2cbus_mapping[x])
         SfpUtilBase.__init__(self)
+
+    def _read_val(self, path):
+        ret = ''
+        try:
+            with open(path, 'r') as f:
+                ret = f.readline()
+        except IOError as e:
+            print('Error: unable to open file: %s' % str(e))
+        return ret
+
+    def _write_val(self, path, val):
+        try:
+            with open(path, 'w') as f:
+                f.write(val)
+        except IOError as e:
+            print('Error: unable to write file: %s' % str(e))
+            return False
+        return True
 
     def get_presence(self, port_num):
 
@@ -132,104 +89,58 @@ class SfpUtil(SfpUtilBase):
 
         # Get path for access port presence status
         port_name = self.get_port_name(port_num)
-        sysfs_filename = "qsfp_modprsL" if port_num in self.osfp_ports else "sfp_modabs"
-        reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
+        sysfs_filename = 'qsfp_modprsL' if port_num in self.osfp_ports else 'sfp_modabs'
 
         # Read status
-        try:
-            reg_file = open(reg_path)
-            content = reg_file.readline().rstrip()
-            reg_value = int(content)
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
-            return False
+        status = self._read_val(path.join(
+            self.PORT_INFO_PATH, port_name, sysfs_filename))
 
         # Module present is active low
-        if reg_value == 0:
-            return True
-
-        return False
+        return True if int(status) == 0 else False
 
     def get_low_power_mode(self, port_num):
-        # Check for invalid QSFP port_num
-        if port_num not in self.osfp_ports:
-            return False
 
-        try:
-            port_name = self.get_port_name(port_num)
-            reg_file = open(
-                "/".join([self.PORT_INFO_PATH, port_name, "qsfp_lpmode"]), "r+")
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
+        # Check for invalid QSFP-DD port_num
+        if port_num not in self.osfp_ports:
             return False
 
         # Read status
-        content = reg_file.readline().rstrip()
-        reg_value = int(content, 16)
-        # ModPrsL is active low
-        if reg_value == 0:
-            return False
+        port_name = self.get_port_name(port_num)
+        status = self._read_val(path.join(
+            self.PORT_INFO_PATH, port_name, 'qsfp_lpmode'))
 
-        return True
+        # LPmode is active high
+        return True if int(status, 16) == 1 else False
 
     def set_low_power_mode(self, port_num, lpmode):
-        # Check for invalid QSFP port_num
+
+        # Check for invalid QSFP-DD port_num
         if port_num not in self.osfp_ports:
             return False
 
-        try:
-            port_name = self.get_port_name(port_num)
-            reg_file = open(
-                "/".join([self.PORT_INFO_PATH, port_name, "qsfp_lpmode"]), "r+")
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
-            return False
-
-        content = hex(lpmode)
-
-        reg_file.seek(0)
-        reg_file.write(content)
-        reg_file.close()
-
-        return True
+        return self._write_val(path.join(self.PORT_INFO_PATH, self.get_port_name(port_num), 'qsfp_lpmode'), hex(lpmode))
 
     def reset(self, port_num):
-        # Check for invalid QSFP port_num
+
+        # Check for invalid QSFP-DD port_num
         if port_num not in self.osfp_ports:
             return False
 
-        try:
-            port_name = self.get_port_name(port_num)
-            reg_file = open(
-                "/".join([self.PORT_INFO_PATH, port_name, "qsfp_resetL"]), "w")
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
-            return False
+        sysfs_path = path.join(self.PORT_INFO_PATH,
+                               self.get_port_name(port_num), 'qsfp_resetL')
 
-        # Convert our register value back to a hex string and write back
-        reg_file.seek(0)
-        reg_file.write(hex(0))
-        reg_file.close()
+        self._write_val(sysfs_path, hex(0))
 
         # Sleep 1 second to allow it to settle
         time.sleep(1)
 
         # Flip the bit back high and write back to the register to take port out of reset
-        try:
-            reg_file = open(
-                "/".join([self.PORT_INFO_PATH, port_name, "qsfp_resetL"]), "w")
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
-            return False
-
-        reg_file.seek(0)
-        reg_file.write(hex(1))
-        reg_file.close()
+        self._write_val(sysfs_path, hex(1))
 
         return True
 
     def get_transceiver_change_event(self, timeout=0):
-        """
+        '''
         TBD: When the feature request.
-        """
+        '''
         raise NotImplementedError
