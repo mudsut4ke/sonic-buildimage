@@ -21,6 +21,7 @@ start)
         modprobe ipmi_devintf
         modprobe mc24lc64t
         modprobe baseboard-lpc
+        modprobe come-lpc
         modprobe cls-i2c-ocores
         modprobe cls-fpga
         modprobe xcvr-cls
