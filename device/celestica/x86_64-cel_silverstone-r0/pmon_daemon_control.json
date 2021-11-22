@@ -1,3 +1,7 @@
 {
-    "skip_ledd": true
+    "skip_fancontrol": true,
+    "skip_ledd": true,
+    "skip_psud": false,
+    "skip_syseepromd": false,
+    "skip_xcvrd": false
 }
