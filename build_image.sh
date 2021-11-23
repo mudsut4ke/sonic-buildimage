@@ -23,7 +23,48 @@ fi
     exit 1
 }
 
-IMAGE_VERSION=$(. functions.sh && sonic_get_version)
+IMAGE_VERSION="${SONIC_IMAGE_VERSION}"
+
+generate_kvm_image()
+{
+    NUM_ASIC=$1
+    if [ $NUM_ASIC == 4 ]; then 
+         KVM_IMAGE=$OUTPUT_KVM_4ASIC_IMAGE
+         RECOVERY_ISO=$onie_recovery_kvm_4asic_image
+    elif [ $NUM_ASIC == 6 ]; then
+         KVM_IMAGE=$OUTPUT_KVM_6ASIC_IMAGE
+         RECOVERY_ISO=$onie_recovery_kvm_6asic_image
+    else 
+         KVM_IMAGE=$OUTPUT_KVM_IMAGE
+         RECOVERY_ISO=$onie_recovery_image
+         NUM_ASIC=1
+    fi
+
+    echo "Build $NUM_ASIC-asic KVM image"
+    KVM_IMAGE_DISK=${KVM_IMAGE%.gz}
+    sudo rm -f $KVM_IMAGE_DISK $KVM_IMAGE_DISK.gz
+
+    SONIC_USERNAME=$USERNAME PASSWD=$PASSWORD sudo -E ./scripts/build_kvm_image.sh $KVM_IMAGE_DISK $RECOVERY_ISO $OUTPUT_ONIE_IMAGE $KVM_IMAGE_DISK_SIZE
+
+    if [ $? -ne 0 ]; then
+        echo "Error : build kvm image failed"
+        exit 1
+    fi
+
+    [ -r $KVM_IMAGE_DISK ] || {
+        echo "Error : $KVM_IMAGE_DISK not generated!"
+        exit 1
+    }
+
+    gzip $KVM_IMAGE_DISK
+
+    [ -r $KVM_IMAGE_DISK.gz ] || {
+        echo "Error : gzip $KVM_IMAGE_DISK failed!"
+        exit 1
+    }
+
+    echo "The compressed kvm image is in $KVM_IMAGE_DISK.gz"
+}
 
 generate_onie_installer_image()
 {
@@ -46,10 +87,29 @@ generate_onie_installer_image()
           $ONIE_INSTALLER_PAYLOAD
 }
 
+# Generate asic-specific device list
+generate_device_list()
+{
+    local platforms_asic=$1
+
+    # Create an empty function, and later append to it
+    echo -n > $platforms_asic
+
+    for d in `find -L ./device  -maxdepth 2 -mindepth 2 -type d`; do
+        if [ -f $d/platform_asic ]; then
+            if [ "$CONFIGURED_PLATFORM" = "generic" ] || grep -Fxq "$CONFIGURED_PLATFORM" $d/platform_asic; then
+                echo "${d##*/}" >> "$platforms_asic";
+            fi;
+        fi;
+    done
+}
+
 if [ "$IMAGE_TYPE" = "onie" ]; then
     echo "Build ONIE installer"
     mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
     sudo rm -f $OUTPUT_ONIE_IMAGE
+
+    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
 
     generate_onie_installer_image
 
@@ -61,6 +121,8 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     echo "Build RAW image"
     mkdir -p `dirname $OUTPUT_RAW_IMAGE`
     sudo rm -f $OUTPUT_RAW_IMAGE
+
+    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
 
     generate_onie_installer_image
 
@@ -93,32 +155,18 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
 
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
-    echo "Build KVM image"
-    KVM_IMAGE_DISK=${OUTPUT_KVM_IMAGE%.gz}
-    sudo rm -f $KVM_IMAGE_DISK $KVM_IMAGE_DISK.gz
+    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
 
     generate_onie_installer_image
-
-    SONIC_USERNAME=$USERNAME PASSWD=$PASSWORD sudo -E ./scripts/build_kvm_image.sh $KVM_IMAGE_DISK $onie_recovery_image $OUTPUT_ONIE_IMAGE $KVM_IMAGE_DISK_SIZE
-
-    if [ $? -ne 0 ]; then
-        echo "Error : build kvm image failed"
-        exit 1
+    # Generate single asic KVM image
+    generate_kvm_image
+    if [ "$BUILD_MULTIASIC_KVM" == "y" ]; then
+        # Genrate 4-asic KVM image
+        generate_kvm_image 4
+        # Generate 6-asic KVM image
+        generate_kvm_image 6
     fi
 
-    [ -r $KVM_IMAGE_DISK ] || {
-        echo "Error : $KVM_IMAGE_DISK not generated!"
-        exit 1
-    }
-
-    gzip $KVM_IMAGE_DISK
-
-    [ -r $KVM_IMAGE_DISK.gz ] || {
-        echo "Error : gzip $KVM_IMAGE_DISK failed!"
-        exit 1
-    }
-
-    echo "The compressed kvm image is in $KVM_IMAGE_DISK.gz"
 
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
 elif [ "$IMAGE_TYPE" = "aboot" ]; then
@@ -133,6 +181,7 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     sed -i -e "s/%%IMAGE_VERSION%%/$IMAGE_VERSION/g" files/Aboot/boot0
     pushd files/Aboot && zip -g $OLDPWD/$OUTPUT_ABOOT_IMAGE boot0; popd
     pushd files/Aboot && zip -g $OLDPWD/$ABOOT_BOOT_IMAGE boot0; popd
+    pushd files/image_config/secureboot && zip -g $OLDPWD/$OUTPUT_ABOOT_IMAGE allowlist_paths.conf; popd
     echo "$IMAGE_VERSION" >> .imagehash
     zip -g $OUTPUT_ABOOT_IMAGE .imagehash
     zip -g $ABOOT_BOOT_IMAGE .imagehash
@@ -144,8 +193,17 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $ABOOT_BOOT_IMAGE version
     rm version
 
+    generate_device_list ".platforms_asic"
+    zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
+
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE
+    if [ "$SONIC_ENABLE_IMAGE_SIGNATURE" = "y" ]; then
+        TARGET_CA_CERT="$TARGET_PATH/ca.cert"
+        rm -f "$TARGET_CA_CERT"
+        [ -f "$CA_CERT" ] && cp "$CA_CERT" "$TARGET_CA_CERT"
+        ./scripts/sign_image.sh -i "$OUTPUT_ABOOT_IMAGE" -k "$SIGNING_KEY" -c "$SIGNING_CERT" -a "$TARGET_CA_CERT"
+    fi
 else
     echo "Error: Non supported image type $IMAGE_TYPE"
     exit 1

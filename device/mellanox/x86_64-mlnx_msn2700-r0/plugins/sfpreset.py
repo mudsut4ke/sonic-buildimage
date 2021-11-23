@@ -1,45 +1,45 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+#
+# Copyright (c) 2018-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-import sys, errno
-import os
-from python_sdk_api.sxd_api import *
+"""
+This utility reset the given SFP module.
+"""
+
+import sys
+import errno
 from python_sdk_api.sx_api import *
 
 # Check if SFP port number is provided
 if len(sys.argv) < 2:
-    print "SFP module number or LPM is missed."
-    print "Usage: sfpreset.py <SFP module>"
+    print("SFP module number or LPM is missed.")
+    print("Usage: sfpreset.py <SFP module>")
     sys.exit(errno.EINVAL)
 
 # Init SDK API
 rc, handle = sx_api_open(None)
-if (rc != SX_STATUS_SUCCESS):
-    print "Failed to open api handle.\nPlease check that SDK is running."
-    sys.exit(errno.EACCES)
-
-pid = os.getpid()
-rc = sxd_access_reg_init(pid, None, 0)
-if (rc != 0):
-    print "Failed to initializing register access.\nPlease check that SDK is running."
+if rc != SX_STATUS_SUCCESS:
+    print("Failed to open api handle.\nPlease check that SDK is running.")
     sys.exit(errno.EACCES)
 
 # Get SFP module number
-sfp_module = int(sys.argv[1])
+sfp_module = int(sys.argv[1]) - 1
 
-# Get PMAOS
-pmaos = ku_pmaos_reg()
-pmaos.module = sfp_module
-meta = sxd_reg_meta_t()
-meta.dev_id = 1
-meta.swid = 0
-meta.access_cmd = SXD_ACCESS_CMD_GET
+rc = sx_mgmt_phy_mod_reset(handle, sfp_module)
+assert rc == SX_STATUS_SUCCESS, "sx_mgmt_phy_mod_reset failed, rc = %d" % rc
 
-rc = sxd_access_reg_pmaos(pmaos, meta, 1, None, None)
-assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
-
-# Reset SFP
-pmaos.rst = 1
-meta.access_cmd = SXD_ACCESS_CMD_SET
-rc = sxd_access_reg_pmaos(pmaos, meta, 1, None, None)
-assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
-print "Reset flag is set"
+sx_api_close(handle)

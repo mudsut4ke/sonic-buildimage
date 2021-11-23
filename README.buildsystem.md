@@ -87,7 +87,7 @@ LIBSWSSCOMMON_DEV = libswsscommon-dev_1.0.0_amd64.deb
 $(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(LIBSWSSCOMMON_DEV)))
 ```
 First we define our package swsscommon.  
-Then we secify **SRC_PATH** (path to sources),
+Then we specify **SRC_PATH** (path to sources),
 **DEPENDS** (build dependencies),
 and **RDEPENDS** (runtime dependencies for docker installation).  
 Then we add our target to SONIC_DPKG_DEBS target group.  
@@ -243,7 +243,7 @@ _Recommend: Rename image built using INSTALL_DEBUG_TOOLS=y to mark it explicit. 
 * To debug a core file in non-SONiC environment that supports docker
     * `docker load -i docker-<name>-dbg.gz`
     * copy your unzipped core file into ~/debug
-    * `docker run -it -entrypoint=/bin/bash -v ~/debug:/debug <image id>`
+    * `docker run -it --entrypoint=/bin/bash -v ~/debug:/debug <image id>`
     * `gdb /usr/bin/<your binary> -c /debug/<your core>`
     
 ### Debug SONiC image

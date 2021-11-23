@@ -1,41 +1,27 @@
 #!/bin/bash
-########################################################################
-# Copyright (c) 2020 Mellanox Technologies. All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
 #
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-# 3. Neither the names of the copyright holders nor the names of its
-#    contributors may be used to endorse or promote products derived from
-#    this software without specific prior written permission.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Alternatively, this software may be distributed under the terms of the
-# GNU General Public License ("GPL") version 2 as published by the Free
-# Software Foundation.
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
+
 
 #==============================================================================#
 #=  Global variable                                                            #
 #=
 #=====
-VERSION="1.3"
+VERSION="1.5"
 #=====
 SWITCH_SSD_DEV="/dev/sda"
 UTIL_TITLE="This is MLNX SSD firmware update utility to read and write SSD FW. Version ${VERSION}"
@@ -79,6 +65,8 @@ function init_script() {
     else
         LOGGER_UTIL=$FALSE
     fi
+    export LC_ALL=
+    export LANG="en_US.UTF-8"
 }
 
 #==============================================================================#
@@ -415,7 +403,7 @@ function check_package_signing() {
     LOG_MSG "checksum_signed_file: ${checksum_signed_file}" ${DEBUG_MSG}
     LOG_MSG "checksum_unsigned_file: ${checksum_unsigned_file}" ${DEBUG_MSG}
 
-    gpg --keyring  "$public_cert_file" --verify "$checksum_signed_file" "$checksum_unsigned_file" > /dev/null 2>&1
+    gpg --ignore-time-conflict --keyring  "$public_cert_file" --verify "$checksum_signed_file" "$checksum_unsigned_file" > /dev/null 2>&1
     [ $? -ne 0 ] && LOG_MSG_AND_EXIT "Error: fault package signing."
 
     LOG_MSG "cd into: ${package_path}" ${DEBUG_MSG}
@@ -559,7 +547,7 @@ function print_ssd_info() {
         LOG_MSG "Device Model\t : $SSD_DEVICE_MODEL"
         LOG_MSG "Serial Number\t : $SSD_SERIAL"
         LOG_MSG "User Capacity\t : $SSD_SIZE GB"
-        LOG_MSG "Firmware Version : $SSD_FW_VER"      
+        LOG_MSG "Firmware Version : $SSD_FW_VER"
     fi
 }
 
@@ -695,7 +683,7 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
                 else
                     LOG_MSG "SSD FW update completed successfully."
 
-                    if [ $ARG_POWER_CYCLE_FLAG == $TRUE ]; then
+                    if [[ "yes" == "$power_policy" || $ARG_POWER_CYCLE_FLAG == $TRUE ]]; then
                         LOG_MSG "Execute power cycle..."
                         sleep 1
                         sync
@@ -715,7 +703,7 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
         fi
     done  
     if [ $UPDATE_DONE == $FALSE ]; then
-        LOG_MSG "SSD FW upgrade not require, based on given package latest version is in used."
+        LOG_MSG "SSD FW upgrade is not required, latest version based on given package is in use."
         print_ssd_info "no"
     fi
 
