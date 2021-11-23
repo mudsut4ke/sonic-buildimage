@@ -38,9 +38,9 @@ class Chassis(ChassisBase):
         self.__initialize_eeprom()
         self.is_host = self._api_helper.is_host()
 
-        self.__initialize_fan()
-        self.__initialize_psu()
-        self.__initialize_thermals()
+        # self.__initialize_fan()
+        # self.__initialize_psu()
+        # self.__initialize_thermals()
         self.__initialize_components()
 
     def __initialize_sfp(self):
@@ -151,86 +151,86 @@ class Chassis(ChassisBase):
 
         return (reboot_cause, description)
 
-    def get_change_event(self, timeout=0):
-        """
-        Returns a nested dictionary containing all devices which have
-        experienced a change at chassis level
-        Args:
-            timeout: Timeout in milliseconds (optional). If timeout == 0,
-                this method will block until a change is detected.
-        Returns:
-            (bool, dict):
-                - True if call successful, False if not;
-                - A nested dictionary where key is a device type,
-                  value is a dictionary with key:value pairs in the format of
-                  {'device_id':'device_event'},
-                  where device_id is the device ID for this device and
-                        device_event,
-                             status='1' represents device inserted,
-                             status='0' represents device removed.
-                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
-                      indicates that fan 0 has been removed, fan 2
-                      has been inserted and sfp 11 has been removed.
-        """
-        # SFP event
-        if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+    # def get_change_event(self, timeout=0):
+    #     """
+    #     Returns a nested dictionary containing all devices which have
+    #     experienced a change at chassis level
+    #     Args:
+    #         timeout: Timeout in milliseconds (optional). If timeout == 0,
+    #             this method will block until a change is detected.
+    #     Returns:
+    #         (bool, dict):
+    #             - True if call successful, False if not;
+    #             - A nested dictionary where key is a device type,
+    #               value is a dictionary with key:value pairs in the format of
+    #               {'device_id':'device_event'},
+    #               where device_id is the device ID for this device and
+    #                     device_event,
+    #                          status='1' represents device inserted,
+    #                          status='0' represents device removed.
+    #               Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+    #                   indicates that fan 0 has been removed, fan 2
+    #                   has been inserted and sfp 11 has been removed.
+    #     """
+    #     # SFP event
+    #     if not self.sfp_module_initialized:
+    #         self.__initialize_sfp()
 
-        sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
-        if sfp_event:
-            return True, {'sfp': sfp_event}
+    #     sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+    #     if sfp_event:
+    #         return True, {'sfp': sfp_event}
 
-        return False, {'sfp': {}}
+    #     return False, {'sfp': {}}
 
     ##############################################################
     ######################## SFP methods #########################
     ##############################################################
 
-    def get_num_sfps(self):
-        """
-        Retrieves the number of sfps available on this chassis
-        Returns:
-            An integer, the number of sfps available on this chassis
-        """
-        if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+    # def get_num_sfps(self):
+    #     """
+    #     Retrieves the number of sfps available on this chassis
+    #     Returns:
+    #         An integer, the number of sfps available on this chassis
+    #     """
+    #     if not self.sfp_module_initialized:
+    #         self.__initialize_sfp()
 
-        return len(self._sfp_list)
+    #     return len(self._sfp_list)
 
-    def get_all_sfps(self):
-        """
-        Retrieves all sfps available on this chassis
-        Returns:
-            A list of objects derived from SfpBase representing all sfps
-            available on this chassis
-        """
-        if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+    # def get_all_sfps(self):
+    #     """
+    #     Retrieves all sfps available on this chassis
+    #     Returns:
+    #         A list of objects derived from SfpBase representing all sfps
+    #         available on this chassis
+    #     """
+    #     if not self.sfp_module_initialized:
+    #         self.__initialize_sfp()
 
-        return self._sfp_list
+    #     return self._sfp_list
 
-    def get_sfp(self, index):
-        """
-        Retrieves sfp represented by (1-based) index <index>
-        Args:
-            index: An integer, the index (1-based) of the sfp to retrieve.
-            The index should be the sequence of a physical port in a chassis,
-            starting from 1.
-            For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
-        Returns:
-            An object dervied from SfpBase representing the specified sfp
-        """
-        sfp = None
-        if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+    # def get_sfp(self, index):
+    #     """
+    #     Retrieves sfp represented by (1-based) index <index>
+    #     Args:
+    #         index: An integer, the index (1-based) of the sfp to retrieve.
+    #         The index should be the sequence of a physical port in a chassis,
+    #         starting from 1.
+    #         For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
+    #     Returns:
+    #         An object dervied from SfpBase representing the specified sfp
+    #     """
+    #     sfp = None
+    #     if not self.sfp_module_initialized:
+    #         self.__initialize_sfp()
 
-        try:
-            # The index will start from 1
-            sfp = self._sfp_list[index - 1]
-        except IndexError:
-            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
-                             index, len(self._sfp_list)))
-        return sfp
+    #     try:
+    #         # The index will start from 1
+    #         sfp = self._sfp_list[index - 1]
+    #     except IndexError:
+    #         sys.stderr.write("SFP index {} out of range (1-{})\n".format(
+    #                          index, len(self._sfp_list)))
+    #     return sfp
 
     ##############################################################
     ####################### Other methods ########################
