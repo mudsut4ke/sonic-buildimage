@@ -1,0 +1,294 @@
+{
+    "chassis": {
+        "name": "Silverstone",
+        "components": [
+            {
+                "name": "BIOS"
+            },
+            {
+                "name": "BMC"
+            },
+            {
+                "name": "SWITCH_CPLD"
+            },
+            {
+                "name": "BASE_CPLD"
+            },
+            {
+                "name": "FPGA"
+            }
+        ],
+        "fans": [
+            {
+                "name": "FAN-1F"
+            },
+            {
+                "name": "FAN-1R"
+            },
+            {
+                "name": "FAN-2F"
+            },
+            {
+                "name": "FAN-2R"
+            },
+            {
+                "name": "FAN-3F"
+            },
+            {
+                "name": "FAN-3R"
+            },
+            {
+                "name": "FAN-4F"
+            },
+            {
+                "name": "FAN-4R"
+            },
+            {
+                "name": "FAN-5F"
+            },
+            {
+                "name": "FAN-5R"
+            },
+            {
+                "name": "FAN-6F"
+            },
+            {
+                "name": "FAN-6R"
+            },
+            {
+                "name": "FAN-7F"
+            },
+            {
+                "name": "FAN-7R"
+            }
+        ],
+        "fan_drawers": [
+            {
+                "name": "Drawer1",
+                "fans": [
+                    {
+                        "name": "FAN-1F"
+                    },
+                    {
+                        "name": "FAN-1R"
+                    }
+                ]
+            },
+            {
+                "name": "Drawer2",
+                "fans": [
+                    {
+                        "name": "FAN-2F"
+                    },
+                    {
+                        "name": "FAN-2R"
+                    }
+                ]
+            },
+            {
+                "name": "Drawer3",
+                "fans": [
+                    {
+                        "name": "FAN-3F"
+                    },
+                    {
+                        "name": "FAN-3R"
+                    }
+                ]
+            },
+            {
+                "name": "Drawer4",
+                "fans": [
+                    {
+                        "name": "FAN-4F"
+                    },
+                    {
+                        "name": "FAN-4R"
+                    }
+                ]
+            },
+            {
+                "name": "Drawer5",
+                "fans": [
+                    {
+                        "name": "FAN-5F"
+                    },
+                    {
+                        "name": "FAN-5R"
+                    }
+                ]
+            },
+            {
+                "name": "Drawer6",
+                "fans": [
+                    {
+                        "name": "FAN-6F"
+                    },
+                    {
+                        "name": "FAN-6R"
+                    }
+                ]
+            },
+            {
+                "name": "Drawer7",
+                "fans": [
+                    {
+                        "name": "FAN-7F"
+                    },
+                    {
+                        "name": "FAN-7R"
+                    }
+                ]
+            }
+        ],
+        "psus": [
+            {
+                "name": "PSU-1",
+                "fans": [
+                    {
+                        "name": "PSU-1 FAN-1"
+                    }
+                ]
+            },
+            {
+                "name": "PSU-2",
+                "fans": [
+                    {
+                        "name": "PSU-2 FAN-1"
+                    }
+                ]
+            }
+        ],
+        "thermals": [
+            {
+                "name": "TEMP_FAN_U52"
+            },
+            {
+                "name": "TEMP_FAN_U17"
+            },
+            {
+                "name": "TEMP_SW_U52"
+            },
+            {
+                "name": "TEMP_SW_U16"
+            },
+            {
+                "name": "TEMP_BB_U3"
+            },
+            {
+                "name": "TEMP_CPU"
+            },
+            {
+                "name": "TEMP_SW_Internal"
+            },
+            {
+                "name": "SW_U04_Temp"
+            },
+            {
+                "name": "SW_U14_Temp"
+            },
+            {
+                "name": "SW_U4403_Temp"
+            }
+        ],
+        "sfps": [
+            {
+                "name": "Ethernet0"
+            },
+            {
+                "name": "Ethernet4"
+            },
+            {
+                "name": "Ethernet8"
+            },
+            {
+                "name": "Ethernet12"
+            },
+            {
+                "name": "Ethernet16"
+            },
+            {
+                "name": "Ethernet20"
+            },
+            {
+                "name": "Ethernet24"
+            },
+            {
+                "name": "Ethernet28"
+            },
+            {
+                "name": "Ethernet32"
+            },
+            {
+                "name": "Ethernet36"
+            },
+            {
+                "name": "Ethernet40"
+            },
+            {
+                "name": "Ethernet44"
+            },
+            {
+                "name": "Ethernet48"
+            },
+            {
+                "name": "Ethernet52"
+            },
+            {
+                "name": "Ethernet56"
+            },
+            {
+                "name": "Ethernet60"
+            },
+            {
+                "name": "Ethernet64"
+            },
+            {
+                "name": "Ethernet68"
+            },
+            {
+                "name": "Ethernet72"
+            },
+            {
+                "name": "Ethernet76"
+            },
+            {
+                "name": "Ethernet80"
+            },
+            {
+                "name": "Ethernet84"
+            },
+            {
+                "name": "Ethernet88"
+            },
+            {
+                "name": "Ethernet92"
+            },
+            {
+                "name": "Ethernet96"
+            },
+            {
+                "name": "Ethernet100"
+            },
+            {
+                "name": "Ethernet104"
+            },
+            {
+                "name": "Ethernet108"
+            },
+            {
+                "name": "Ethernet112"
+            },
+            {
+                "name": "Ethernet116"
+            },
+            {
+                "name": "Ethernet120"
+            },
+            {
+                "name": "Ethernet124"
+            }
+        ]
+    },
+    "interfaces": {}
+}
