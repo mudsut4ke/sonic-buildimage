@@ -20,123 +20,290 @@
         ],
         "fans": [
             {
-                "name": "FAN-1F"
+                "name": "FAN-1F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-1R"
+                "name": "FAN-1R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-2F"
+                "name": "FAN-2F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-2R"
+                "name": "FAN-2R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-3F"
+                "name": "FAN-3F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-3R"
+                "name": "FAN-3R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-4F"
+                "name": "FAN-4F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-4R"
+                "name": "FAN-4R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-5F"
+                "name": "FAN-5F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-5R"
+                "name": "FAN-5R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-6F"
+                "name": "FAN-6F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-6R"
+                "name": "FAN-6R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-7F"
+                "name": "FAN-7F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             },
             {
-                "name": "FAN-7R"
+                "name": "FAN-7R",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                }
             }
         ],
         "fan_drawers": [
             {
                 "name": "Drawer1",
+                "max_consumed_power": false,
+                "speed": {
+                    "controllable": false
+                },
                 "fans": [
                     {
-                        "name": "FAN-1F"
+                        "name": "FAN-1F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-1R"
+                        "name": "FAN-1R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             },
             {
                 "name": "Drawer2",
+                "max_consumed_power": false,
+                "speed": {
+                    "controllable": false
+                },
                 "fans": [
                     {
-                        "name": "FAN-2F"
+                        "name": "FAN-2F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-2R"
+                        "name": "FAN-2R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             },
             {
                 "name": "Drawer3",
+                "max_consumed_power": false,
                 "fans": [
                     {
-                        "name": "FAN-3F"
+                        "name": "FAN-3F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-3R"
+                        "name": "FAN-3R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             },
             {
                 "name": "Drawer4",
+                "max_consumed_power": false,
                 "fans": [
                     {
-                        "name": "FAN-4F"
+                        "name": "FAN-4F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-4R"
+                        "name": "FAN-4R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             },
             {
                 "name": "Drawer5",
+                "max_consumed_power": false,
                 "fans": [
                     {
-                        "name": "FAN-5F"
+                        "name": "FAN-5F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-5R"
+                        "name": "FAN-5R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             },
             {
                 "name": "Drawer6",
+                "max_consumed_power": false,
                 "fans": [
                     {
-                        "name": "FAN-6F"
+                        "name": "FAN-6F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-6R"
+                        "name": "FAN-6R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             },
             {
                 "name": "Drawer7",
+                "max_consumed_power": false,
                 "fans": [
                     {
-                        "name": "FAN-7F"
+                        "name": "FAN-7F",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     },
                     {
-                        "name": "FAN-7R"
+                        "name": "FAN-7R",
+                        "status_led": {
+                            "controllable": true,
+                            "colors": ["green", "amber","off"]
+                        }
                     }
                 ]
             }
@@ -144,51 +311,113 @@
         "psus": [
             {
                 "name": "PSU-1",
+                "current": false,
+                "power": false,
+                "max_power": false,
+                "voltage_high_threshold": false,
+                "voltage_low_threshold": false,
+                "temperature": false,
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                },
                 "fans": [
                     {
-                        "name": "PSU-1 FAN-1"
+                        "name": "PSU-1 FAN-1",
+                        "speed": {
+                            "controllable": false
+                        },
+                        "status_led": {
+                            "controllable": false
+                        }
                     }
                 ]
             },
             {
                 "name": "PSU-2",
+                "current": false,
+                "power": false,
+                "max_power": false,
+                "voltage_high_threshold": false,
+                "voltage_low_threshold": false,
+                "temperature": false,
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "amber","off"]
+                },
                 "fans": [
                     {
-                        "name": "PSU-2 FAN-1"
+                        "name": "PSU-2 FAN-1",
+                        "speed": {
+                            "controllable": false
+                        },
+                        "status_led": {
+                            "controllable": false
+                        }
                     }
                 ]
             }
         ],
         "thermals": [
             {
-                "name": "TEMP_FAN_U52"
+                "name": "TEMP_FAN_U52",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "TEMP_FAN_U17"
+                "name": "TEMP_FAN_U17",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "TEMP_SW_U52"
+                "name": "TEMP_SW_U52",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "TEMP_SW_U16"
+                "name": "TEMP_SW_U16",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "TEMP_BB_U3"
+                "name": "TEMP_BB_U3",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "TEMP_CPU"
+                "name": "TEMP_CPU",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "TEMP_SW_Internal"
+                "name": "TEMP_SW_Internal",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "SW_U04_Temp"
+                "name": "SW_U04_Temp",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "SW_U14_Temp"
+                "name": "SW_U14_Temp",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "SW_U4403_Temp"
+                "name": "SW_U4403_Temp",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             }
         ],
         "sfps": [
