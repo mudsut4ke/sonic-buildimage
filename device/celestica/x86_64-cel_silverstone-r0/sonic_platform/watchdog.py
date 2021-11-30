@@ -9,18 +9,16 @@ import time
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
-    from sonic_platform.common import Common
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-PLATFORM_CPLD_PATH = '/sys/devices/platform/baseboard/'
+PLATFORM_CPLD_PATH = '/sys/devices/platform/baseboard-lpc/'
 GETREG_FILE = 'getreg'
 SETREG_FILE = 'setreg'
-WDT_ENABLE_REG = '0xA181'
-WDT_TIMER_L_BIT_REG = '0xA182'
-WDT_TIMER_M_BIT_REG = '0xA183'
-WDT_TIMER_H_BIT_REG = '0xA184'
-WDT_KEEP_ALVIVE_REG = '0xA185'
+WDT_TIMER_REG = '0XA181'
+WDT_ENABLE_REG = '0xA182'
+WDT_KEEP_ALVIVE_REG = '0xA184'
 ENABLE_CMD = '0x1'
 DISABLE_CMD = '0x0'
 WDT_COMMON_ERROR = -1
@@ -31,7 +29,7 @@ class Watchdog(WatchdogBase):
     def __init__(self):
         WatchdogBase.__init__(self)
 
-        self._api_common = Common()
+        self._api_helper = APIHelper()
 
         # Init cpld reg path
         self.setreg_path = os.path.join(PLATFORM_CPLD_PATH, SETREG_FILE)
@@ -46,37 +44,25 @@ class Watchdog(WatchdogBase):
         """
         Turn on the watchdog timer
         """
-        # echo 0xA181 0x1 > /sys/devices/platform/baseboard/setreg
+        # echo 0xA182 0x1 > /sys/devices/platform/baseboard-lpc/setreg
         enable_val = '{} {}'.format(WDT_ENABLE_REG, ENABLE_CMD)
-        return self._api_common.write_txt_file(self.setreg_path, enable_val)
+        return self._api_helper.write_txt_file(self.setreg_path, enable_val)
 
     def _disable(self):
         """
         Turn off the watchdog timer
         """
-        # echo 0xA181 0x0 > /sys/devices/platform/baseboard/setreg
+        # echo 0xA182 0x0 > /sys/devices/platform/baseboard-lpc/setreg
         disable_val = '{} {}'.format(WDT_ENABLE_REG, DISABLE_CMD)
-        return self._api_common.write_txt_file(self.setreg_path, disable_val)
+        return self._api_helper.write_txt_file(self.setreg_path, disable_val)
 
     def _keepalive(self):
         """
         Keep alive watchdog timer
         """
-        # echo 0xA185 0x1 > /sys/devices/platform/baseboard/setreg
+        # echo 0xA184 0x1 > /sys/devices/platform/baseboard-lpc/setreg
         enable_val = '{} {}'.format(WDT_KEEP_ALVIVE_REG, ENABLE_CMD)
-        return self._api_common.write_txt_file(self.setreg_path, enable_val)
-
-    def _get_level_hex(self, sub_hex):
-        sub_hex_str = sub_hex.replace("x", "0")
-        return hex(int(sub_hex_str, 16))
-
-    def _seconds_to_lmh_hex(self, seconds):
-        ms = seconds*1000  # calculate timeout in ms format
-        hex_str = hex(ms)
-        l = self._get_level_hex(hex_str[-2:])
-        m = self._get_level_hex(hex_str[-4:-2])
-        h = self._get_level_hex(hex_str[-6:-4])
-        return (l, m, h)
+        return self._api_helper.write_txt_file(self.setreg_path, enable_val)
 
     def _settimeout(self, seconds):
         """
@@ -84,20 +70,17 @@ class Watchdog(WatchdogBase):
         @param seconds - timeout in seconds
         @return is the actual set timeout
         """
-        # max = 0xffffff = 16777.215 seconds
+        second_int = {
+            30: 1,
+            60: 2,
+            180: 3,
+            240: 4,
+            300: 5,
+            420: 6,
+            600: 7,
+        }.get(seconds)
 
-        (l, m, h) = self._seconds_to_lmh_hex(seconds)
-        set_h_val = '{} {}'.format(WDT_TIMER_H_BIT_REG, h)
-        set_m_val = '{} {}'.format(WDT_TIMER_M_BIT_REG, m)
-        set_l_val = '{} {}'.format(WDT_TIMER_L_BIT_REG, l)
-
-        self._api_common.write_txt_file(
-            self.setreg_path, set_h_val)  # set high bit
-        self._api_common.write_txt_file(
-            self.setreg_path, set_m_val)  # set med bit
-        self._api_common.write_txt_file(
-            self.setreg_path, set_l_val)  # set low bit
-
+        self._api_helper.write_txt_file(self.setreg_path, second_int)
         return seconds
 
     def _gettimeout(self):
@@ -105,17 +88,19 @@ class Watchdog(WatchdogBase):
         Get watchdog timeout
         @return watchdog timeout
         """
+        hex_str = self._api_helper.get_cpld_reg_value(
+            self.getreg_path, WDT_TIMER_REG)
+        bin_val = bin(int(hex_str, 16))[2:].zfill(3)
 
-        h_bit = self._api_common.get_reg(
-            self.getreg_path, WDT_TIMER_H_BIT_REG)
-        m_bit = self._api_common.get_reg(
-            self.getreg_path, WDT_TIMER_M_BIT_REG)
-        l_bit = self._api_common.get_reg(
-            self.getreg_path, WDT_TIMER_L_BIT_REG)
-
-        hex_time = '0x{}{}{}'.format(h_bit[2:], m_bit[2:], l_bit[2:])
-        ms = int(hex_time, 16)
-        return int(float(ms)/1000)
+        return {
+            '001': 30,
+            '010': 60,
+            '011': 180,
+            '100': 240,
+            '101': 300,
+            '110': 420,
+            '111': 600
+        }.get(bin_val)
 
     #################################################################
 
@@ -132,8 +117,10 @@ class Watchdog(WatchdogBase):
             was armed with. On failure returns -1.
         """
 
+        avaliable_second = [30, 60, 180, 240, 300, 420, 600]
         ret = WDT_COMMON_ERROR
-        if seconds < 0:
+
+        if seconds < 0 or seconds not in avaliable_second:
             return ret
 
         try:
