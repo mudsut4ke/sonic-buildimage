@@ -237,18 +237,18 @@ class Chassis(ChassisBase):
     ####################### Other methods ########################
     ##############################################################
 
-    # def get_watchdog(self):
-    #     """
-    #     Retreives hardware watchdog device on this chassis
-    #     Returns:
-    #         An object derived from WatchdogBase representing the hardware
-    #         watchdog device
-    #     """
-    #     if self._watchdog is None:
-    #         from sonic_platform.watchdog import Watchdog
-    #         self._watchdog = Watchdog()
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        if self._watchdog is None:
+            from sonic_platform.watchdog import Watchdog
+            self._watchdog = Watchdog()
 
-    #     return self._watchdog
+        return self._watchdog
 
     ##############################################################
     ###################### Device methods ########################

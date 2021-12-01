@@ -25,7 +25,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -35,7 +35,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -45,7 +45,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -55,7 +55,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -65,7 +65,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -75,7 +75,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -85,7 +85,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -95,7 +95,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -105,7 +105,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -115,7 +115,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -125,7 +125,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -135,7 +135,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -145,7 +145,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             },
@@ -155,7 +155,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 }
             }
@@ -171,15 +171,21 @@
                     {
                         "name": "FAN-1F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-1R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -194,15 +200,21 @@
                     {
                         "name": "FAN-2F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-2R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -214,15 +226,21 @@
                     {
                         "name": "FAN-3F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-3R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -234,15 +252,21 @@
                     {
                         "name": "FAN-4F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-4R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -254,15 +278,21 @@
                     {
                         "name": "FAN-5F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-5R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -274,15 +304,21 @@
                     {
                         "name": "FAN-6F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-6R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -294,15 +330,21 @@
                     {
                         "name": "FAN-7F",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     },
                     {
                         "name": "FAN-7R",
                         "status_led": {
-                            "controllable": true,
+                            "controllable": false,
                             "colors": ["green", "amber","off"]
+                        },
+                        "speed": {
+                            "controllable": false
                         }
                     }
                 ]
@@ -318,7 +360,7 @@
                 "voltage_low_threshold": false,
                 "temperature": false,
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 },
                 "fans": [
@@ -342,7 +384,7 @@
                 "voltage_low_threshold": false,
                 "temperature": false,
                 "status_led": {
-                    "controllable": true,
+                    "controllable": false,
                     "colors": ["green", "amber","off"]
                 },
                 "fans": [
