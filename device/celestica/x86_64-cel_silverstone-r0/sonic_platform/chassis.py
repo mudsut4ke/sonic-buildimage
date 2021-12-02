@@ -26,6 +26,13 @@ NUM_COMPONENT = 5
 IPMI_OEM_NETFN = "0x3A"
 IPMI_GET_REBOOT_CAUSE = "0x03 0x00 0x01 0x06"
 
+IPMI_SET_SYS_LED_CMD = "0x00 0x02 {}"
+IPMI_GET_SYS_LED_CMD = "0x00 0x02"
+
+SYS_LED_OFF_CMD = "0x00"
+SYS_LED_GREEN_CMD = "0x01"
+SYS_LED_AMBER_CMD = "0x02"
+
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -51,7 +58,7 @@ class Chassis(ChassisBase):
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
             sfp = Sfp(index)
-            #sfp = Sfp(index, sfputil_helper.logical[index])
+            # sfp = Sfp(index, sfputil_helper.logical[index])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
@@ -70,7 +77,7 @@ class Chassis(ChassisBase):
 
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
-        #airflow = self.__get_air_flow()
+        # airflow = self.__get_air_flow()
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
@@ -250,6 +257,10 @@ class Chassis(ChassisBase):
 
         return self._watchdog
 
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
+
     ##############################################################
     ###################### Device methods ########################
     ##############################################################
@@ -320,17 +331,17 @@ class Chassis(ChassisBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
+        led_cmd = {
+            self.STATUS_LED_COLOR_GREEN: SYS_LED_GREEN_CMD,
+            self.STATUS_LED_COLOR_AMBER: SYS_LED_AMBER_CMD,
+            self.STATUS_LED_COLOR_OFF: SYS_LED_OFF_CMD
+        }.get(color)
 
-        # set_status_str = {
-        #     self.STATUS_LED_COLOR_GREEN: '1',
-        #     self.STATUS_LED_COLOR_OFF: '0'
-        # }.get(color, None)
+        status, set_led = self._api_helper.ipmi_raw(
+            IPMI_OEM_NETFN, IPMI_SET_SYS_LED_CMD.format(led_cmd))
+        set_status_led = False if not status else True
 
-        # if not set_status_str:
-        #     return False
-
-        # self._api_helper.write_txt_file(STATUS_LED_PATH, set_status_str)
-        return False
+        return set_status_led
 
     def get_status_led(self):
         """
@@ -338,10 +349,12 @@ class Chassis(ChassisBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        # status = self._api_helper.read_txt_file(STATUS_LED_PATH)
-        # status_str = {
-        #     '255': self.STATUS_LED_COLOR_GREEN,
-        #     '0': self.STATUS_LED_COLOR_OFF
-        # }.get(status, None)
+        status, hx_color = self._api_helper.ipmi_raw(
+            IPMI_OEM_NETFN, IPMI_GET_SYS_LED_CMD)
 
-        return self.STATUS_LED_COLOR_GREEN  # status_str
+        status_led = {
+            "00": self.STATUS_LED_COLOR_OFF,
+            "01": self.STATUS_LED_COLOR_GREEN,
+            "02": self.STATUS_LED_COLOR_AMBER,
+        }.get(hx_color, self.STATUS_LED_COLOR_OFF)
+        return status_led
