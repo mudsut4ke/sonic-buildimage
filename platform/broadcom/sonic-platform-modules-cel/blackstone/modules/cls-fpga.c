@@ -20,7 +20,7 @@
 #include <linux/interrupt.h>
 #include <linux/i2c.h>
 #include <linux/platform_device.h>
-#include "<linux/platform_data/i2c-ocores.h>"
+#include <linux/platform_data/i2c-ocores.h>
 #include "xcvr-cls.h"
 
 #define MOD_VERSION "1.0.0"
