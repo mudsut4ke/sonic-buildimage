@@ -19,14 +19,14 @@ start)
 
         modprobe i2c-dev
         modprobe ipmi_devintf
+        modprobe cls-i2c-mux-pca954x
         modprobe mc24lc64t
+        
         modprobe baseboard-lpc
         modprobe come-lpc
-        modprobe cls-i2c-ocores
         modprobe cls-fpga
         modprobe xcvr-cls
         modprobe misc_cpld
-        modprobe i2c-mux-pca954x force_deselect_on_exit=1
 
         # Instantiate TLV EEPROM device on I801 bus
         devname=`cat /sys/bus/i2c/devices/i2c-0/name`
@@ -46,6 +46,12 @@ start)
         for i in {13..14}
         do
                 echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-$i/new_device
+        done
+
+        # use optoe3 for QSFP-DD.
+        for i in {15..46}
+        do
+                echo optoe3 0x50 > /sys/bus/i2c/devices/i2c-$i/new_device
         done
 
         /bin/sh /usr/local/bin/platform_api_mgnt.sh init
