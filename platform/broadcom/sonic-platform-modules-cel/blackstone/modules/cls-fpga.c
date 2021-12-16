@@ -22,6 +22,7 @@
 #include <linux/platform_device.h>
 #include <linux/platform_data/i2c-ocores.h>
 #include "xcvr-cls.h"
+#include "cls-pca954x.h"
 
 #define MOD_VERSION "1.0.0"
 #define DRV_NAME "cls-fpga"
@@ -454,7 +455,7 @@ module_param(bus_clock_master_14, int, 0660);
 MODULE_PARM_DESC(bus_clock_master_14,
 				 "I2C master 14 bus speed in KHz 50/80/100/200/400");
 
-/* PCA9548 channel config on MASTER BUS 3 */
+/* PCA9548 channel config on MASTER BUS 6 */
 static struct pca954x_platform_mode i2c_mux_70_modes[] = {
 	I2C_MUX_CHANNEL(0, I2C_BUS_OFS + 1, true),
 	I2C_MUX_CHANNEL(1, I2C_BUS_OFS + 0, true),
@@ -477,6 +478,7 @@ static struct pca954x_platform_mode i2c_mux_71_modes[] = {
 	I2C_MUX_CHANNEL(7, I2C_BUS_OFS + 14, true),
 };
 
+/* PCA9548 channel config on MASTER BUS 12 */
 static struct pca954x_platform_mode i2c_mux_72_modes[] = {
 	I2C_MUX_CHANNEL(0, I2C_BUS_OFS + 17, true),
 	I2C_MUX_CHANNEL(1, I2C_BUS_OFS + 16, true),
