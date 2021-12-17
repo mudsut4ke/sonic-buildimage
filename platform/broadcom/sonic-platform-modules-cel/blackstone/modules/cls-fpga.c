@@ -24,7 +24,7 @@
 #include "xcvr-cls.h"
 #include "cls-pca954x.h"
 
-#define MOD_VERSION "1.0.0"
+#define MOD_VERSION "1.0.1"
 #define DRV_NAME "cls-fpga"
 
 #define I2C_MUX_CHANNEL(_ch, _adap_id) \
@@ -968,7 +968,6 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	if (dev)
 	{
 		err = fpga_pci_probe(dev);
-		//		pci_dev_put(dev);
 	}
 	else
 	{

@@ -41,6 +41,12 @@ start)
         echo misc_cpld1 0x30 > /sys/bus/i2c/devices/i2c-10/new_device
         echo misc_cpld2 0x31 > /sys/bus/i2c/devices/i2c-11/new_device
 
+        # To control the mux channel idle behavior.
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/6-0070/idle_state
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/6-0071/idle_state
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/12-0072/idle_state
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/12-0073/idle_state
+
         # Attach Optical Module EEPROM
         # use optoe2 for SFP+.
         for i in {13..14}
