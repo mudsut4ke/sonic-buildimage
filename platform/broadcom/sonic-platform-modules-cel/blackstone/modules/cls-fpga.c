@@ -55,20 +55,20 @@
  *  @pdata - a platform data of an i2c-core device.
  */
 struct i2c_bus_config {
-  int id;
-  struct resource *res;
-  ssize_t num_res;
-  struct ocores_i2c_platform_data pdata;
+    int id;
+    struct resource *res;
+    ssize_t num_res;
+    struct ocores_i2c_platform_data pdata;
 };
 
 /* fpga_priv - fpga private data */
 struct fpga_priv {
-  unsigned long base;
-  int num_i2c_bus;
-  struct platform_device **i2cbuses_pdev;
-  struct platform_device *regio_pdev;
-  struct platform_device *spiflash_pdev;
-  struct platform_device *xcvr_pdev;
+    unsigned long base;
+    int num_i2c_bus;
+    struct platform_device **i2cbuses_pdev;
+    struct platform_device *regio_pdev;
+    struct platform_device *spiflash_pdev;
+    struct platform_device *xcvr_pdev;
 };
 
 /* Switchboard FPGA attributes */
@@ -97,10 +97,10 @@ static struct kobject *swfpga = NULL;
 #define CLASS_NAME "cls_fpga"
 
 struct fpga_device {
-  /* data mmio region */
-  void __iomem *data_base_addr;
-  resource_size_t data_mmio_start;
-  resource_size_t data_mmio_len;
+    /* data mmio region */
+    void __iomem *data_base_addr;
+    resource_size_t data_mmio_start;
+    resource_size_t data_mmio_len;
 };
 
 static struct fpga_device fpga_dev = {
@@ -110,8 +110,8 @@ static struct fpga_device fpga_dev = {
 };
 
 struct silverstone_fpga_data {
-  struct mutex fpga_lock;  // For FPGA internal lock
-  void __iomem *fpga_read_addr;
+    struct mutex fpga_lock;  // For FPGA internal lock
+    void __iomem *fpga_read_addr;
 };
 
 struct silverstone_fpga_data *fpga_data;
@@ -125,10 +125,10 @@ struct silverstone_fpga_data *fpga_data;
  */
 static ssize_t get_fpga_reg_value(struct device *dev,
                                   struct device_attribute *devattr, char *buf) {
-  // read data from the address
-  uint32_t data;
-  data = ioread32(fpga_data->fpga_read_addr);
-  return sprintf(buf, "0x%8.8x\n", data);
+    // read data from the address
+    uint32_t data;
+    data = ioread32(fpga_data->fpga_read_addr);
+    return sprintf(buf, "0x%8.8x\n", data);
 }
 /**
  * Store the register address
@@ -138,15 +138,15 @@ static ssize_t get_fpga_reg_value(struct device *dev,
 static ssize_t set_fpga_reg_address(struct device *dev,
                                     struct device_attribute *devattr,
                                     const char *buf, size_t count) {
-  uint32_t addr;
-  char *last;
+    uint32_t addr;
+    char *last;
 
-  addr = (uint32_t)strtoul(buf, &last, 16);
-  if (addr == 0 && buf == last) {
-    return -EINVAL;
-  }
-  fpga_data->fpga_read_addr = fpga_dev.data_base_addr + addr;
-  return count;
+    addr = (uint32_t)strtoul(buf, &last, 16);
+    if (addr == 0 && buf == last) {
+        return -EINVAL;
+    }
+    fpga_data->fpga_read_addr = fpga_dev.data_base_addr + addr;
+    return count;
 }
 /**
  * Show value of fpga scratch register
@@ -155,8 +155,9 @@ static ssize_t set_fpga_reg_address(struct device *dev,
  */
 static ssize_t get_fpga_scratch(struct device *dev,
                                 struct device_attribute *devattr, char *buf) {
-  return sprintf(buf, "0x%8.8x\n",
-                 ioread32(fpga_dev.data_base_addr + FPGA_SCRATCH) & 0xffffffff);
+    return sprintf(
+        buf, "0x%8.8x\n",
+        ioread32(fpga_dev.data_base_addr + FPGA_SCRATCH) & 0xffffffff);
 }
 /**
  * Store value of fpga scratch register
@@ -166,14 +167,14 @@ static ssize_t get_fpga_scratch(struct device *dev,
 static ssize_t set_fpga_scratch(struct device *dev,
                                 struct device_attribute *devattr,
                                 const char *buf, size_t count) {
-  uint32_t data;
-  char *last;
-  data = (uint32_t)strtoul(buf, &last, 16);
-  if (data == 0 && buf == last) {
-    return -EINVAL;
-  }
-  iowrite32(data, fpga_dev.data_base_addr + FPGA_SCRATCH);
-  return count;
+    uint32_t data;
+    char *last;
+    data = (uint32_t)strtoul(buf, &last, 16);
+    if (data == 0 && buf == last) {
+        return -EINVAL;
+    }
+    iowrite32(data, fpga_dev.data_base_addr + FPGA_SCRATCH);
+    return count;
 }
 /**
  * Store a value in a specific register address
@@ -183,58 +184,58 @@ static ssize_t set_fpga_scratch(struct device *dev,
 static ssize_t set_fpga_reg_value(struct device *dev,
                                   struct device_attribute *devattr,
                                   const char *buf, size_t count) {
-  // register are 4 bytes
-  uint32_t addr;
-  uint32_t value;
-  uint32_t mode = 8;
-  char *tok;
-  char clone[count + 1];
-  char *pclone = clone;
-  char *last;
+    // register are 4 bytes
+    uint32_t addr;
+    uint32_t value;
+    uint32_t mode = 8;
+    char *tok;
+    char clone[count + 1];
+    char *pclone = clone;
+    char *last;
 
-  strcpy(clone, buf);
+    strcpy(clone, buf);
 
-  mutex_lock(&fpga_data->fpga_lock);
-  tok = strsep((char **)&pclone, " ");
-  if (tok == NULL) {
-    mutex_unlock(&fpga_data->fpga_lock);
-    return -EINVAL;
-  }
-  addr = (uint32_t)strtoul(tok, &last, 16);
-  if (addr == 0 && tok == last) {
-    mutex_unlock(&fpga_data->fpga_lock);
-    return -EINVAL;
-  }
-  tok = strsep((char **)&pclone, " ");
-  if (tok == NULL) {
-    mutex_unlock(&fpga_data->fpga_lock);
-    return -EINVAL;
-  }
-  value = (uint32_t)strtoul(tok, &last, 16);
-  if (value == 0 && tok == last) {
-    mutex_unlock(&fpga_data->fpga_lock);
-    return -EINVAL;
-  }
-  tok = strsep((char **)&pclone, " ");
-  if (tok == NULL) {
-    mode = 32;
-  } else {
-    mode = (uint32_t)strtoul(tok, &last, 10);
-    if (mode == 0 && tok == last) {
-      mutex_unlock(&fpga_data->fpga_lock);
-      return -EINVAL;
+    mutex_lock(&fpga_data->fpga_lock);
+    tok = strsep((char **)&pclone, " ");
+    if (tok == NULL) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
     }
-  }
-  if (mode == 32) {
-    iowrite32(value, fpga_dev.data_base_addr + addr);
-  } else if (mode == 8) {
-    iowrite8(value, fpga_dev.data_base_addr + addr);
-  } else {
+    addr = (uint32_t)strtoul(tok, &last, 16);
+    if (addr == 0 && tok == last) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    tok = strsep((char **)&pclone, " ");
+    if (tok == NULL) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    value = (uint32_t)strtoul(tok, &last, 16);
+    if (value == 0 && tok == last) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    tok = strsep((char **)&pclone, " ");
+    if (tok == NULL) {
+        mode = 32;
+    } else {
+        mode = (uint32_t)strtoul(tok, &last, 10);
+        if (mode == 0 && tok == last) {
+            mutex_unlock(&fpga_data->fpga_lock);
+            return -EINVAL;
+        }
+    }
+    if (mode == 32) {
+        iowrite32(value, fpga_dev.data_base_addr + addr);
+    } else if (mode == 8) {
+        iowrite8(value, fpga_dev.data_base_addr + addr);
+    } else {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
     mutex_unlock(&fpga_data->fpga_lock);
-    return -EINVAL;
-  }
-  mutex_unlock(&fpga_data->fpga_lock);
-  return count;
+    return count;
 }
 
 /**
@@ -245,21 +246,22 @@ static ssize_t set_fpga_reg_value(struct device *dev,
 static ssize_t dump_read(struct file *filp, struct kobject *kobj,
                          struct bin_attribute *attr, char *buf, loff_t off,
                          size_t count) {
-  unsigned long i = 0;
-  ssize_t status;
-  u8 read_reg;
+    unsigned long i = 0;
+    ssize_t status;
+    u8 read_reg;
 
-  if (off + count > PORT_XCVR_REGISTER_SIZE) {
-    return -EINVAL;
-  }
-  mutex_lock(&fpga_data->fpga_lock);
-  while (i < count) {
-    read_reg = ioread8(fpga_dev.data_base_addr + SFF_PORT_CTRL_BASE + off + i);
-    buf[i++] = read_reg;
-  }
-  status = count;
-  mutex_unlock(&fpga_data->fpga_lock);
-  return status;
+    if (off + count > PORT_XCVR_REGISTER_SIZE) {
+        return -EINVAL;
+    }
+    mutex_lock(&fpga_data->fpga_lock);
+    while (i < count) {
+        read_reg =
+            ioread8(fpga_dev.data_base_addr + SFF_PORT_CTRL_BASE + off + i);
+        buf[i++] = read_reg;
+    }
+    status = count;
+    mutex_unlock(&fpga_data->fpga_lock);
+    return status;
 }
 
 /**
@@ -269,13 +271,13 @@ static ssize_t dump_read(struct file *filp, struct kobject *kobj,
  */
 static ssize_t ready_show(struct device *dev, struct device_attribute *attr,
                           char *buf) {
-  u32 data;
-  unsigned int REGISTER = FPGA_PORT_XCVR_READY;
+    u32 data;
+    unsigned int REGISTER = FPGA_PORT_XCVR_READY;
 
-  mutex_lock(&fpga_data->fpga_lock);
-  data = ioread32(fpga_dev.data_base_addr + REGISTER);
-  mutex_unlock(&fpga_data->fpga_lock);
-  return sprintf(buf, "%d\n", (data >> 0) & 1U);
+    mutex_lock(&fpga_data->fpga_lock);
+    data = ioread32(fpga_dev.data_base_addr + REGISTER);
+    mutex_unlock(&fpga_data->fpga_lock);
+    return sprintf(buf, "%d\n", (data >> 0) & 1U);
 }
 
 static DEVICE_ATTR(getreg, 0600, get_fpga_reg_value, set_fpga_reg_address);
@@ -304,56 +306,56 @@ static struct attribute_group fpga_attr_grp = {
 
 /* move this on top of platform_probe() */
 static int fpga_pci_probe(struct pci_dev *pdev) {
-  int err;
-  struct device *dev = &pdev->dev;
-  uint32_t fpga_version;
+    int err;
+    struct device *dev = &pdev->dev;
+    uint32_t fpga_version;
 
-  /* Skip the reqions request and mmap the resource */
-  /* bar0: data mmio region */
-  fpga_dev.data_mmio_start = pci_resource_start(pdev, FPGA_PCI_BAR_NUM);
-  fpga_dev.data_mmio_len = pci_resource_len(pdev, FPGA_PCI_BAR_NUM);
-  fpga_dev.data_base_addr =
-      ioremap_nocache(fpga_dev.data_mmio_start, fpga_dev.data_mmio_len);
-  if (!fpga_dev.data_base_addr) {
-    dev_err(dev, "cannot iomap region of size %lu\n",
-            (unsigned long)fpga_dev.data_mmio_len);
-    err = PTR_ERR(fpga_dev.data_base_addr);
-    goto err_exit;
-  }
-  dev_info(dev, "data_mmio iomap base = 0x%lx \n",
-           (unsigned long)fpga_dev.data_base_addr);
-  dev_info(dev, "data_mmio_start = 0x%lx data_mmio_len = %lu\n",
-           (unsigned long)fpga_dev.data_mmio_start,
+    /* Skip the reqions request and mmap the resource */
+    /* bar0: data mmio region */
+    fpga_dev.data_mmio_start = pci_resource_start(pdev, FPGA_PCI_BAR_NUM);
+    fpga_dev.data_mmio_len = pci_resource_len(pdev, FPGA_PCI_BAR_NUM);
+    fpga_dev.data_base_addr =
+        ioremap_nocache(fpga_dev.data_mmio_start, fpga_dev.data_mmio_len);
+    if (!fpga_dev.data_base_addr) {
+        dev_err(dev, "cannot iomap region of size %lu\n",
+                (unsigned long)fpga_dev.data_mmio_len);
+        err = PTR_ERR(fpga_dev.data_base_addr);
+        goto err_exit;
+    }
+    dev_info(dev, "data_mmio iomap base = 0x%lx \n",
+             (unsigned long)fpga_dev.data_base_addr);
+    dev_info(dev, "data_mmio_start = 0x%lx data_mmio_len = %lu\n",
+             (unsigned long)fpga_dev.data_mmio_start,
+             (unsigned long)fpga_dev.data_mmio_len);
+
+    printk(KERN_INFO "FPGA PCIe driver probe OK.\n");
+    printk(KERN_INFO "FPGA ioremap registers of size %lu\n",
            (unsigned long)fpga_dev.data_mmio_len);
+    printk(KERN_INFO "FPGA Virtual BAR %d at %8.8lx - %8.8lx\n",
+           FPGA_PCI_BAR_NUM, (unsigned long)fpga_dev.data_base_addr,
+           (unsigned long)(fpga_dev.data_base_addr + fpga_dev.data_mmio_len));
+    printk(KERN_INFO "");
+    fpga_version = ioread32(fpga_dev.data_base_addr);
+    printk(KERN_INFO "FPGA VERSION : %8.8x\n", fpga_version);
 
-  printk(KERN_INFO "FPGA PCIe driver probe OK.\n");
-  printk(KERN_INFO "FPGA ioremap registers of size %lu\n",
-         (unsigned long)fpga_dev.data_mmio_len);
-  printk(KERN_INFO "FPGA Virtual BAR %d at %8.8lx - %8.8lx\n", FPGA_PCI_BAR_NUM,
-         (unsigned long)fpga_dev.data_base_addr,
-         (unsigned long)(fpga_dev.data_base_addr + fpga_dev.data_mmio_len));
-  printk(KERN_INFO "");
-  fpga_version = ioread32(fpga_dev.data_base_addr);
-  printk(KERN_INFO "FPGA VERSION : %8.8x\n", fpga_version);
-
-  fpgafwclass = class_create(THIS_MODULE, CLASS_NAME);
-  if (IS_ERR(fpgafwclass)) {
-    printk(KERN_ALERT "Failed to register device class\n");
-    err = PTR_ERR(fpgafwclass);
-    goto mem_unmap;
-  }
-  return 0;
+    fpgafwclass = class_create(THIS_MODULE, CLASS_NAME);
+    if (IS_ERR(fpgafwclass)) {
+        printk(KERN_ALERT "Failed to register device class\n");
+        err = PTR_ERR(fpgafwclass);
+        goto mem_unmap;
+    }
+    return 0;
 
 mem_unmap:
-  iounmap(fpga_dev.data_base_addr);
+    iounmap(fpga_dev.data_base_addr);
 err_exit:
-  return err;
+    return err;
 }
 
 static void fpga_pci_remove(void) {
-  iounmap(fpga_dev.data_base_addr);
-  //	class_unregister(fpgafwclass);
-  class_destroy(fpgafwclass);
+    iounmap(fpga_dev.data_base_addr);
+    //	class_unregister(fpgafwclass);
+    class_destroy(fpgafwclass);
 };
 /* end FPGA */
 
@@ -897,222 +899,223 @@ static struct cls_xcvr_platform_data xcvr_data = {
 //	 so xcvr, fwupgrade device can configured as options.
 
 static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
-  int ret = 0;
-  struct fpga_priv *priv;
-  struct platform_device **i2cbuses_pdev;
-  struct platform_device *regio_pdev;
-  struct platform_device *xcvr_pdev;
-  unsigned long rstart;
-  int num_i2c_bus, i;
-  int err;
+    int ret = 0;
+    struct fpga_priv *priv;
+    struct platform_device **i2cbuses_pdev;
+    struct platform_device *regio_pdev;
+    struct platform_device *xcvr_pdev;
+    unsigned long rstart;
+    int num_i2c_bus, i;
+    int err;
 
-  err = pci_enable_device(dev);
-  if (err) {
-    dev_err(&dev->dev, "Failed to enable PCI device\n");
-    goto err_exit;
-  }
-
-  if (dev) {
-    err = fpga_pci_probe(dev);
-  } else {
-    ret = -ENODEV;
-    goto err_exit;
-  }
-  if (0 != err) {
-    dev_err(&dev->dev, "Failed to do fpga pci probe\n");
-    goto err_disable_device;
-  }
-
-  fpga_data =
-      devm_kzalloc(&dev->dev, sizeof(struct silverstone_fpga_data), GFP_KERNEL);
-  if (!fpga_data) {
-    ret = -ENOMEM;
-    goto err_disable_device;
-  }
-
-  /* Check for valid MMIO address */
-  rstart = pci_resource_start(dev, MMIO_BAR);
-  if (!rstart) {
-    dev_err(&dev->dev,
-            "Switchboard base address uninitialized, "
-            "check FPGA\n");
-    err = -ENODEV;
-    goto err_disable_device;
-  }
-
-  dev_dbg(&dev->dev, "BAR%d res: 0x%lx-0x%llx\n", MMIO_BAR, rstart,
-          pci_resource_end(dev, MMIO_BAR));
-
-  priv = devm_kzalloc(&dev->dev, sizeof(struct fpga_priv), GFP_KERNEL);
-  if (!priv) {
-    err = -ENOMEM;
-    goto err_disable_device;
-  }
-
-  pci_set_drvdata(dev, priv);
-
-  swfpga = kobject_create_and_add("FPGA4SW", &dev->dev.kobj);
-  if (!swfpga) {
-    ret = -ENOMEM;
-    goto err_disable_device;
-  }
-
-  ret = sysfs_create_group(swfpga, &fpga_attr_grp);
-  if (ret != 0) {
-    printk(KERN_ERR "Cannot create FPGA sysfs attributes\n");
-    goto err_remove_fpga;
-  }
-
-  num_i2c_bus = ARRAY_SIZE(i2c_bus_configs);
-  i2cbuses_pdev = devm_kzalloc(
-      &dev->dev, num_i2c_bus * sizeof(struct platform_device *), GFP_KERNEL);
-
-  reg_io_res[0].start += rstart;
-  reg_io_res[0].end += rstart;
-
-  xcvr_res[0].start += rstart;
-  xcvr_res[0].end += rstart;
-
-  regio_pdev = platform_device_register_resndata(
-      &dev->dev, "cls-swbrd-io", -1, reg_io_res, ARRAY_SIZE(reg_io_res), NULL,
-      0);
-
-  if (IS_ERR(regio_pdev)) {
-    dev_err(&dev->dev, "Failed to register cls-swbrd-io\n");
-    err = PTR_ERR(regio_pdev);
-    goto err_remove_grp_fpga;
-  }
-
-  xcvr_pdev = platform_device_register_resndata(NULL, "cls-xcvr", -1, xcvr_res,
-                                                ARRAY_SIZE(xcvr_res),
-                                                &xcvr_data, sizeof(xcvr_data));
-
-  if (IS_ERR(xcvr_pdev)) {
-    dev_err(&dev->dev, "Failed to register xcvr node\n");
-    err = PTR_ERR(xcvr_pdev);
-    goto err_unregister_regio;
-  }
-
-  for (i = 0; i < num_i2c_bus; i++) {
-    i2c_bus_configs[i].res[0].start += rstart;
-    i2c_bus_configs[i].res[0].end += rstart;
-
-    printk("start %x ... end %x\n", i2c_bus_configs[i].res[0].start,
-           i2c_bus_configs[i].res[0].end);
-
-    switch (i2c_bus_configs[i].id) {
-      case 1:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_1;
-        break;
-      case 2:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_2;
-        break;
-      case 3:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_3;
-        break;
-      case 4:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_4;
-        break;
-      case 5:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_5;
-        break;
-      case 6:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_6;
-        break;
-      case 7:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_7;
-        break;
-      case 8:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_8;
-        break;
-      case 9:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_9;
-        break;
-      case 10:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_10;
-        break;
-      case 11:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_11;
-        break;
-      case 12:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_12;
-        break;
-      case 13:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_13;
-        break;
-      case 14:
-        i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_14;
-        break;
-      default:
-        i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
+    err = pci_enable_device(dev);
+    if (err) {
+        dev_err(&dev->dev, "Failed to enable PCI device\n");
+        goto err_exit;
     }
 
-    dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n", i2c_bus_configs[i].id,
-            i2c_bus_configs[i].res[0].start, i2c_bus_configs[i].res[0].end);
-
-    i2cbuses_pdev[i] = platform_device_register_resndata(
-        &dev->dev, "ocores-i2c",  //"i2c-ocores","cls-ocores-i2c"
-        i2c_bus_configs[i].id, i2c_bus_configs[i].res,
-        i2c_bus_configs[i].num_res, &i2c_bus_configs[i].pdata,
-        sizeof(i2c_bus_configs[i].pdata));
-
-    if (IS_ERR(i2cbuses_pdev[i])) {
-      dev_err(&dev->dev, "Failed to register ocores-i2c.%d\n",
-              i2c_bus_configs[i].id);
-      err = PTR_ERR(i2cbuses_pdev[i]);
-      goto err_unregister_ocore;
+    if (dev) {
+        err = fpga_pci_probe(dev);
+    } else {
+        ret = -ENODEV;
+        goto err_exit;
     }
-  }
+    if (0 != err) {
+        dev_err(&dev->dev, "Failed to do fpga pci probe\n");
+        goto err_disable_device;
+    }
 
-  priv->base = rstart;
-  priv->num_i2c_bus = num_i2c_bus;
-  priv->i2cbuses_pdev = i2cbuses_pdev;
-  priv->regio_pdev = regio_pdev;
-  priv->xcvr_pdev = xcvr_pdev;
+    fpga_data = devm_kzalloc(&dev->dev, sizeof(struct silverstone_fpga_data),
+                             GFP_KERNEL);
+    if (!fpga_data) {
+        ret = -ENOMEM;
+        goto err_disable_device;
+    }
 
-  // Set default read address to VERSION
-  fpga_data->fpga_read_addr = fpga_dev.data_base_addr + FPGA_VERSION;
-  mutex_init(&fpga_data->fpga_lock);
+    /* Check for valid MMIO address */
+    rstart = pci_resource_start(dev, MMIO_BAR);
+    if (!rstart) {
+        dev_err(&dev->dev,
+                "Switchboard base address uninitialized, "
+                "check FPGA\n");
+        err = -ENODEV;
+        goto err_disable_device;
+    }
 
-  return 0;
+    dev_dbg(&dev->dev, "BAR%d res: 0x%lx-0x%llx\n", MMIO_BAR, rstart,
+            pci_resource_end(dev, MMIO_BAR));
+
+    priv = devm_kzalloc(&dev->dev, sizeof(struct fpga_priv), GFP_KERNEL);
+    if (!priv) {
+        err = -ENOMEM;
+        goto err_disable_device;
+    }
+
+    pci_set_drvdata(dev, priv);
+
+    swfpga = kobject_create_and_add("FPGA4SW", &dev->dev.kobj);
+    if (!swfpga) {
+        ret = -ENOMEM;
+        goto err_disable_device;
+    }
+
+    ret = sysfs_create_group(swfpga, &fpga_attr_grp);
+    if (ret != 0) {
+        printk(KERN_ERR "Cannot create FPGA sysfs attributes\n");
+        goto err_remove_fpga;
+    }
+
+    num_i2c_bus = ARRAY_SIZE(i2c_bus_configs);
+    i2cbuses_pdev = devm_kzalloc(
+        &dev->dev, num_i2c_bus * sizeof(struct platform_device *), GFP_KERNEL);
+
+    reg_io_res[0].start += rstart;
+    reg_io_res[0].end += rstart;
+
+    xcvr_res[0].start += rstart;
+    xcvr_res[0].end += rstart;
+
+    regio_pdev = platform_device_register_resndata(
+        &dev->dev, "cls-swbrd-io", -1, reg_io_res, ARRAY_SIZE(reg_io_res), NULL,
+        0);
+
+    if (IS_ERR(regio_pdev)) {
+        dev_err(&dev->dev, "Failed to register cls-swbrd-io\n");
+        err = PTR_ERR(regio_pdev);
+        goto err_remove_grp_fpga;
+    }
+
+    xcvr_pdev = platform_device_register_resndata(
+        NULL, "cls-xcvr", -1, xcvr_res, ARRAY_SIZE(xcvr_res), &xcvr_data,
+        sizeof(xcvr_data));
+
+    if (IS_ERR(xcvr_pdev)) {
+        dev_err(&dev->dev, "Failed to register xcvr node\n");
+        err = PTR_ERR(xcvr_pdev);
+        goto err_unregister_regio;
+    }
+
+    for (i = 0; i < num_i2c_bus; i++) {
+        i2c_bus_configs[i].res[0].start += rstart;
+        i2c_bus_configs[i].res[0].end += rstart;
+
+        printk("start %x ... end %x\n", i2c_bus_configs[i].res[0].start,
+               i2c_bus_configs[i].res[0].end);
+
+        switch (i2c_bus_configs[i].id) {
+            case 1:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_1;
+                break;
+            case 2:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_2;
+                break;
+            case 3:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_3;
+                break;
+            case 4:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_4;
+                break;
+            case 5:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_5;
+                break;
+            case 6:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_6;
+                break;
+            case 7:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_7;
+                break;
+            case 8:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_8;
+                break;
+            case 9:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_9;
+                break;
+            case 10:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_10;
+                break;
+            case 11:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_11;
+                break;
+            case 12:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_12;
+                break;
+            case 13:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_13;
+                break;
+            case 14:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_14;
+                break;
+            default:
+                i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
+        }
+
+        dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",
+                i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start,
+                i2c_bus_configs[i].res[0].end);
+
+        i2cbuses_pdev[i] = platform_device_register_resndata(
+            &dev->dev, "ocores-i2c",  //"i2c-ocores","cls-ocores-i2c"
+            i2c_bus_configs[i].id, i2c_bus_configs[i].res,
+            i2c_bus_configs[i].num_res, &i2c_bus_configs[i].pdata,
+            sizeof(i2c_bus_configs[i].pdata));
+
+        if (IS_ERR(i2cbuses_pdev[i])) {
+            dev_err(&dev->dev, "Failed to register ocores-i2c.%d\n",
+                    i2c_bus_configs[i].id);
+            err = PTR_ERR(i2cbuses_pdev[i]);
+            goto err_unregister_ocore;
+        }
+    }
+
+    priv->base = rstart;
+    priv->num_i2c_bus = num_i2c_bus;
+    priv->i2cbuses_pdev = i2cbuses_pdev;
+    priv->regio_pdev = regio_pdev;
+    priv->xcvr_pdev = xcvr_pdev;
+
+    // Set default read address to VERSION
+    fpga_data->fpga_read_addr = fpga_dev.data_base_addr + FPGA_VERSION;
+    mutex_init(&fpga_data->fpga_lock);
+
+    return 0;
 
 err_unregister_ocore:
-  for (i = 0; i < num_i2c_bus; i++) {
-    if (priv->i2cbuses_pdev[i]) {
-      platform_device_unregister(priv->i2cbuses_pdev[i]);
+    for (i = 0; i < num_i2c_bus; i++) {
+        if (priv->i2cbuses_pdev[i]) {
+            platform_device_unregister(priv->i2cbuses_pdev[i]);
+        }
     }
-  }
 err_unregister_xcvr:
-  platform_device_unregister(xcvr_pdev);
+    platform_device_unregister(xcvr_pdev);
 err_unregister_regio:
-  platform_device_unregister(regio_pdev);
+    platform_device_unregister(regio_pdev);
 err_remove_grp_fpga:
-  sysfs_remove_group(swfpga, &fpga_attr_grp);
+    sysfs_remove_group(swfpga, &fpga_attr_grp);
 err_remove_fpga:
-  kobject_put(swfpga);
-  fpga_pci_remove();
+    kobject_put(swfpga);
+    fpga_pci_remove();
 err_disable_device:
-  pci_disable_device(dev);
+    pci_disable_device(dev);
 err_exit:
-  return err;
+    return err;
 }
 
 static void cls_fpga_remove(struct pci_dev *dev) {
-  int i;
-  struct fpga_priv *priv = pci_get_drvdata(dev);
+    int i;
+    struct fpga_priv *priv = pci_get_drvdata(dev);
 
-  for (i = 0; i < priv->num_i2c_bus; i++) {
-    if (priv->i2cbuses_pdev[i])
-      platform_device_unregister(priv->i2cbuses_pdev[i]);
-  }
-  platform_device_unregister(priv->xcvr_pdev);
-  platform_device_unregister(priv->regio_pdev);
-  sysfs_remove_group(swfpga, &fpga_attr_grp);
-  kobject_put(swfpga);
-  fpga_pci_remove();
-  pci_disable_device(dev);
+    for (i = 0; i < priv->num_i2c_bus; i++) {
+        if (priv->i2cbuses_pdev[i])
+            platform_device_unregister(priv->i2cbuses_pdev[i]);
+    }
+    platform_device_unregister(priv->xcvr_pdev);
+    platform_device_unregister(priv->regio_pdev);
+    sysfs_remove_group(swfpga, &fpga_attr_grp);
+    kobject_put(swfpga);
+    fpga_pci_remove();
+    pci_disable_device(dev);
 
-  return;
+    return;
 };
 
 static const struct pci_device_id pci_fpga[] = {
