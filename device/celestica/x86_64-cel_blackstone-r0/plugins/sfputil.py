@@ -31,7 +31,7 @@ SW_CPLD1_PATH = "/sys/bus/i2c/devices/10-0030/CPLD1/"
 SW_CPLD2_PATH = "/sys/bus/i2c/devices/11-0031/CPLD2/"
 
 ACTIVE_LOW = 0
-ACTIVE_HIGHT = 0
+ACTIVE_HIGH = 1
 
 PORT_START = 1
 PORT_END = 32
@@ -141,7 +141,7 @@ class SfpUtil(SfpUtilBase):
             self.PORT_INFO_PATH, port_name, QSFP_LPMODE_FILE))
 
         # LPmode is active high
-        return int(status, 16) == ACTIVE_HIGHT
+        return int(status, 16) == ACTIVE_HIGH
 
     def set_low_power_mode(self, port_num, lpmode):
 
