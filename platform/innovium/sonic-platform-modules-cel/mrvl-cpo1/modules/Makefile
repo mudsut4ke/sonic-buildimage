@@ -1,1 +1,1 @@
-obj-m := fpga_device.o fpga_system.o fpga_xcvr.o cls-i2c-xiic.o ctrl_cpld.o come_cpld.o mc24lc64t.o
+obj-m := cls-fpga.o fpga-xcvr.o ctrl_cpld.o come_cpld.o mc24lc64t.o cls-i2c-ocores.o

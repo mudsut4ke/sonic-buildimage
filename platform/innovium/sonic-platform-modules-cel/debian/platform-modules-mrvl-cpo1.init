@@ -24,10 +24,9 @@ start)
 		modprobe come_cpld
 
 		# FPGA driver load
-		modprobe fpga_device
-		modprobe fpga_system
-		modprobe cls_i2c_xiic
-		modprobe fpga_xcvr
+		modprobe cls-fpga
+		modprobe cls-i2c-ocores
+		modprobe fpga-xcvr
        	
 		# Instantiate TLV EEPROM device on I801/ISMT bus 
 		devname=`cat /sys/bus/i2c/devices/i2c-0/name`
@@ -46,12 +45,14 @@ stop)
         echo 0x56 > /sys/bus/i2c/devices/i2c-0/delete_device
 
 		# FPGA driver unload
-		rmmod fpga_xcvr
-		rmmod cls_i2c_xiic
-		rmmod fpga_system
-		rmmod fpga_device
+		rmmod fpga-xcvr
+		rmmod cls-i2c-ocores
+        rmmod cls-fpga
 
 		# CPLD driver unload
+		rmmod come_cpld
+		modprobe ctrl_cpld
+
 		rmmod mc24lc64t
 		rmmod i2c-dev
 

@@ -1,7 +1,5 @@
 /*
- * fpga_device.c - PCI device driver for Marvell CPO1 Switch board FPGA.
- *
- * Author: Wirut Getbamrung
+ * cls-fpga.c - PCI device driver for Blackstone FPGA.
  *
  * Copyright (C) 2021 Celestica Corp.
  *
@@ -11,65 +9,31 @@
  * (at your option) any later version.
  *
  *
-Baseboard FPGA:
-    /sys/devices/platform/
-                        ├── fpga-sys
-                        │   ├── dump
-                        │   ├── getreg
-                        │   ├── scratch
-                        │   ├── setreg
-                        │   └── version
-                        ├── fpga-xcvr/
-                        │   ├── SFP1
-                        │   │	├── sfp_modabs
-                        │   │	├── sfp_rxlos
-                        │   │	├── sfp_txdisable
-                        │   │	├── sfp_txfault
-                        │   └── SFP2
-                        │       ├── sfp_modabs
-                        │       ├── sfp_rxlos
-                        │       ├── sfp_txdisable
-                        │       └── sfp_txfault
-
  */
 
 #include <linux/acpi.h>
 #include <linux/i2c.h>
-#include <linux/i2c/pca954x.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/pci.h>
+// #include <linux/platform_data/i2c-ocores.h>
 #include <linux/platform_device.h>
 #include <linux/stddef.h>
 
-#include "cls-i2c-xiic.h"
-#include "fpga_xcvr.h"
+#include "cls-i2c-ocores.h"
+#include "fpga-xcvr.h"
 
 #define MOD_VERSION "1.0.0"
-#define DRV_NAME "fpga_device"
+#define DRV_NAME "fpga-sys"
 
-#define I2C_MUX_CHANNEL(_ch, _adap_id, _deselect) \
-    [_ch] = {.adap_id = _adap_id, .deselect_on_exit = _deselect}
+#define I2C_MUX_CHANNEL(_ch, _adap_id) [_ch] = {.adap_id = _adap_id}
 
 #define FPGA_PCIE_DEVICE_ID 0x7021
-
-#define FPGA_TYPE_ADDR 0x0C
-#define FPGA_OTHER_CR_ADDR 0x14
-
-#define BMC_PRESENT_BIT 0x08
-#define BMC_PRESENT                                     \
-    0x00 /* FPGA_OTHER_CR_ADDR bit8 0-bmc present 1-bmc \
-            absent*/
-
-#define FPGA_EXCLUDE_MIN_BUS                                                \
-    8 /* iic core 0-7 is share with BMC, 8 and 9 is for FPGA only, mask 0-7 \
-         when BMC is present*/
-
 #define MMIO_BAR 0
-#define PCA9548_I2C_BUS_OFS \
-    11 /* for mrvl-cpo1, 2 bus for COMe, 10 bus for FPGA, [0~11] */
+/* Reserve some bus numbers for CPU or FPGA */
+#define I2C_BUS_OFS 15
 
 /* I2C ocore configurations */
 #define OCORE_REGSHIFT 2
@@ -79,8 +43,10 @@ Baseboard FPGA:
 
 /* Optical port xcvr configuration */
 #define XCVR_REG_SHIFT 2
-#define XCVR_NUM_PORT 32
+#define XCVR_NUM_PORT 34
 #define XCVR_PORT_REG_SIZE 0x10
+
+#define SILVERSTONE2_BSP 1
 
 /* i2c_bus_config - an i2c-core resource and platform data
  *  @id - I2C bus device ID, for identification.
@@ -95,20 +61,303 @@ struct i2c_bus_config {
     struct ocores_i2c_platform_data pdata;
 };
 
-/* switchbrd_priv - switchboard private data */
-struct switchbrd_priv {
-    void __iomem *iomem;
+/* fpga_priv - fpga private data */
+struct fpga_priv {
     unsigned long base;
     int num_i2c_bus;
-    const char *i2c_devname;
-    const char *xcvr_devname;
-    const char *fpga_devname;
     struct platform_device **i2cbuses_pdev;
     struct platform_device *regio_pdev;
     struct platform_device *spiflash_pdev;
     struct platform_device *xcvr_pdev;
-    struct platform_device *fpga_pdev;
 };
+
+/* Switchboard FPGA attributes */
+static int fpga_pci_probe(struct pci_dev *pdev);
+static void fpga_pci_remove(void);
+
+/* MISC       */
+#define FPGA_VERSION 0x0000
+#define FPGA_VERSION_MJ_MSK 0xff00
+#define FPGA_VERSION_MN_MSK 0x00ff
+#define FPGA_SCRATCH 0x0004
+#define FPGA_PORT_XCVR_READY 0x000c
+
+/* FPGA FRONT PANEL PORT MGMT */
+#define SFF_PORT_CTRL_BASE 0x4000
+
+#define PORT_XCVR_REGISTER_SIZE 0x1000
+
+static struct class *fpgafwclass =
+    NULL;  // < The device-driver class struct pointer
+static struct kobject *swfpga = NULL;
+
+#define FPGA_PCI_DEVICE_ID 0x7021
+#define FPGA_PCI_BAR_NUM 0
+
+#define CLASS_NAME "cls_fpga"
+
+struct fpga_device {
+    /* data mmio region */
+    void __iomem *data_base_addr;
+    resource_size_t data_mmio_start;
+    resource_size_t data_mmio_len;
+};
+
+static struct fpga_device fpga_dev = {
+    .data_base_addr = 0,
+    .data_mmio_start = 0,
+    .data_mmio_len = 0,
+};
+
+struct silverstone_fpga_data {
+    struct mutex fpga_lock;  // For FPGA internal lock
+    void __iomem *fpga_read_addr;
+};
+
+struct silverstone_fpga_data *fpga_data;
+
+/**
+ * Show the value of the register set by 'set_fpga_reg_address'
+ * If the address is not set by 'set_fpga_reg_address' first,
+ * The version register is selected by default.
+ * @param  buf     register value in hextring
+ * @return         number of bytes read, or an error code
+ */
+static ssize_t get_fpga_reg_value(struct device *dev,
+                                  struct device_attribute *devattr, char *buf) {
+    // read data from the address
+    uint32_t data;
+    data = ioread32(fpga_data->fpga_read_addr);
+    return sprintf(buf, "0x%8.8x\n", data);
+}
+/**
+ * Store the register address
+ * @param  buf     address wanted to be read value of
+ * @return         number of bytes stored, or an error code
+ */
+static ssize_t set_fpga_reg_address(struct device *dev,
+                                    struct device_attribute *devattr,
+                                    const char *buf, size_t count) {
+    uint32_t addr;
+    char *last;
+
+    addr = (uint32_t)strtoul(buf, &last, 16);
+    if (addr == 0 && buf == last) {
+        return -EINVAL;
+    }
+    fpga_data->fpga_read_addr = fpga_dev.data_base_addr + addr;
+    return count;
+}
+/**
+ * Show value of fpga scratch register
+ * @param  buf     register value in hexstring
+ * @return         number of bytes read, or an error code
+ */
+static ssize_t get_fpga_scratch(struct device *dev,
+                                struct device_attribute *devattr, char *buf) {
+    return sprintf(
+        buf, "0x%8.8x\n",
+        ioread32(fpga_dev.data_base_addr + FPGA_SCRATCH) & 0xffffffff);
+}
+/**
+ * Store value of fpga scratch register
+ * @param  buf     scratch register value passing from user space
+ * @return         number of bytes stored, or an error code
+ */
+static ssize_t set_fpga_scratch(struct device *dev,
+                                struct device_attribute *devattr,
+                                const char *buf, size_t count) {
+    uint32_t data;
+    char *last;
+    data = (uint32_t)strtoul(buf, &last, 16);
+    if (data == 0 && buf == last) {
+        return -EINVAL;
+    }
+    iowrite32(data, fpga_dev.data_base_addr + FPGA_SCRATCH);
+    return count;
+}
+/**
+ * Store a value in a specific register address
+ * @param  buf     the value and address in format '0xhhhh 0xhhhhhhhh'
+ * @return         number of bytes sent by user space, or an error code
+ */
+static ssize_t set_fpga_reg_value(struct device *dev,
+                                  struct device_attribute *devattr,
+                                  const char *buf, size_t count) {
+    // register are 4 bytes
+    uint32_t addr;
+    uint32_t value;
+    uint32_t mode = 8;
+    char *tok;
+    char clone[count + 1];
+    char *pclone = clone;
+    char *last;
+
+    strcpy(clone, buf);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    tok = strsep((char **)&pclone, " ");
+    if (tok == NULL) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    addr = (uint32_t)strtoul(tok, &last, 16);
+    if (addr == 0 && tok == last) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    tok = strsep((char **)&pclone, " ");
+    if (tok == NULL) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    value = (uint32_t)strtoul(tok, &last, 16);
+    if (value == 0 && tok == last) {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    tok = strsep((char **)&pclone, " ");
+    if (tok == NULL) {
+        mode = 32;
+    } else {
+        mode = (uint32_t)strtoul(tok, &last, 10);
+        if (mode == 0 && tok == last) {
+            mutex_unlock(&fpga_data->fpga_lock);
+            return -EINVAL;
+        }
+    }
+    if (mode == 32) {
+        iowrite32(value, fpga_dev.data_base_addr + addr);
+    } else if (mode == 8) {
+        iowrite8(value, fpga_dev.data_base_addr + addr);
+    } else {
+        mutex_unlock(&fpga_data->fpga_lock);
+        return -EINVAL;
+    }
+    mutex_unlock(&fpga_data->fpga_lock);
+    return count;
+}
+
+/**
+ * Read all FPGA XCVR register in binary mode.
+ * @param  buf   Raw transceivers port startus and control register values
+ * @return       number of bytes read, or an error code
+ */
+static ssize_t dump_read(struct file *filp, struct kobject *kobj,
+                         struct bin_attribute *attr, char *buf, loff_t off,
+                         size_t count) {
+    unsigned long i = 0;
+    ssize_t status;
+    u8 read_reg;
+
+    if (off + count > PORT_XCVR_REGISTER_SIZE) {
+        return -EINVAL;
+    }
+    mutex_lock(&fpga_data->fpga_lock);
+    while (i < count) {
+        read_reg =
+            ioread8(fpga_dev.data_base_addr + SFF_PORT_CTRL_BASE + off + i);
+        buf[i++] = read_reg;
+    }
+    status = count;
+    mutex_unlock(&fpga_data->fpga_lock);
+    return status;
+}
+
+/**
+ * Show FPGA port XCVR ready status
+ * @param  buf  1 if the functin is ready, 0 if not.
+ * @return      number of bytes read, or an error code
+ */
+static ssize_t ready_show(struct device *dev, struct device_attribute *attr,
+                          char *buf) {
+    u32 data;
+    unsigned int REGISTER = FPGA_PORT_XCVR_READY;
+
+    mutex_lock(&fpga_data->fpga_lock);
+    data = ioread32(fpga_dev.data_base_addr + REGISTER);
+    mutex_unlock(&fpga_data->fpga_lock);
+    return sprintf(buf, "%d\n", (data >> 0) & 1U);
+}
+
+static DEVICE_ATTR(getreg, 0600, get_fpga_reg_value, set_fpga_reg_address);
+static DEVICE_ATTR(scratch, 0600, get_fpga_scratch, set_fpga_scratch);
+static DEVICE_ATTR(setreg, 0200, NULL, set_fpga_reg_value);
+static DEVICE_ATTR_RO(ready);
+static BIN_ATTR_RO(dump, PORT_XCVR_REGISTER_SIZE);
+
+static struct bin_attribute *fpga_bin_attrs[] = {
+    &bin_attr_dump,
+    NULL,
+};
+
+static struct attribute *fpga_attrs[] = {
+    &dev_attr_getreg.attr,
+    &dev_attr_scratch.attr,
+    &dev_attr_setreg.attr,
+    &dev_attr_ready.attr,
+    NULL,
+};
+
+static struct attribute_group fpga_attr_grp = {
+    .attrs = fpga_attrs,
+    .bin_attrs = fpga_bin_attrs,
+};
+
+/* move this on top of platform_probe() */
+static int fpga_pci_probe(struct pci_dev *pdev) {
+    int err;
+    struct device *dev = &pdev->dev;
+    uint32_t fpga_version;
+
+    /* Skip the reqions request and mmap the resource */
+    /* bar0: data mmio region */
+    fpga_dev.data_mmio_start = pci_resource_start(pdev, FPGA_PCI_BAR_NUM);
+    fpga_dev.data_mmio_len = pci_resource_len(pdev, FPGA_PCI_BAR_NUM);
+    fpga_dev.data_base_addr =
+        ioremap_nocache(fpga_dev.data_mmio_start, fpga_dev.data_mmio_len);
+    if (!fpga_dev.data_base_addr) {
+        dev_err(dev, "cannot iomap region of size %lu\n",
+                (unsigned long)fpga_dev.data_mmio_len);
+        err = PTR_ERR(fpga_dev.data_base_addr);
+        goto err_exit;
+    }
+    dev_info(dev, "data_mmio iomap base = 0x%lx \n",
+             (unsigned long)fpga_dev.data_base_addr);
+    dev_info(dev, "data_mmio_start = 0x%lx data_mmio_len = %lu\n",
+             (unsigned long)fpga_dev.data_mmio_start,
+             (unsigned long)fpga_dev.data_mmio_len);
+
+    printk(KERN_INFO "FPGA PCIe driver probe OK.\n");
+    printk(KERN_INFO "FPGA ioremap registers of size %lu\n",
+           (unsigned long)fpga_dev.data_mmio_len);
+    printk(KERN_INFO "FPGA Virtual BAR %d at %8.8lx - %8.8lx\n",
+           FPGA_PCI_BAR_NUM, (unsigned long)fpga_dev.data_base_addr,
+           (unsigned long)(fpga_dev.data_base_addr + fpga_dev.data_mmio_len));
+    printk(KERN_INFO "");
+    fpga_version = ioread32(fpga_dev.data_base_addr);
+    printk(KERN_INFO "FPGA VERSION : %8.8x\n", fpga_version);
+
+    fpgafwclass = class_create(THIS_MODULE, CLASS_NAME);
+    if (IS_ERR(fpgafwclass)) {
+        printk(KERN_ALERT "Failed to register device class\n");
+        err = PTR_ERR(fpgafwclass);
+        goto mem_unmap;
+    }
+    return 0;
+
+mem_unmap:
+    iounmap(fpga_dev.data_base_addr);
+err_exit:
+    return err;
+}
+
+static void fpga_pci_remove(void) {
+    iounmap(fpga_dev.data_base_addr);
+    //	class_unregister(fpgafwclass);
+    class_destroy(fpgafwclass);
+};
+/* end FPGA */
 
 /* I2C bus speed param */
 static int bus_clock_master_1 = 100;
@@ -166,202 +415,8 @@ module_param(bus_clock_master_11, int, 0660);
 MODULE_PARM_DESC(bus_clock_master_11,
                  "I2C master 11 bus speed in KHz 50/80/100/200/400");
 
-// // NOTE:  Marvell CPO1 i2c channel mapping is very wierd!!!
-// /* PCA9548 channel config on MASTER BUS */
-// static struct pca954x_platform_mode i2c_mux_71[] = {
-//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 1, true),
-//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 2, true),
-//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 3, true),
-//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 4, true),
-//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 5, true),
-//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 6, true),
-//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 7, true),
-//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 8, true),
-// };
-
-// static struct pca954x_platform_mode i2c_mux_73[] = {
-//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 9, true),
-//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 10, true),
-//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 11, true),
-//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 12, true),
-//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 13, true),
-//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 14, true),
-//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 15, true),
-//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 16, true),
-// };
-
-// static struct pca954x_platform_mode i2c_mux_70[] = {
-//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 17, true),
-//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 18, true),
-//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 19, true),
-//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 20, true),
-//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 21, true),
-//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 22, true),
-//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 23, true),
-//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 24, true),
-// };
-
-// static struct pca954x_platform_mode i2c_mux_72[] = {
-//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 25, true),
-//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 26, true),
-//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 27, true),
-//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 28, true),
-//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 29, true),
-//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 30, true),
-//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 31, true),
-//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 32, true),
-// };
-
-// /* 33-sfp1 34-sfp2  35-LMK*/
-// static struct pca954x_platform_mode i2c_mux_74[] = {
-//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 33, true),
-//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 34, true),
-//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 35, true),
-//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 36, true),
-//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 37, true),
-//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 38, true),
-//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 39, true),
-//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 40, true),
-// };
-
-// static struct pca954x_platform_data om_muxes[] = {
-//     {
-//         .modes = i2c_mux_70,
-//         .num_modes = ARRAY_SIZE(i2c_mux_70),
-//     },
-//     {
-//         .modes = i2c_mux_71,
-//         .num_modes = ARRAY_SIZE(i2c_mux_71),
-//     },
-//     {
-//         .modes = i2c_mux_72,
-//         .num_modes = ARRAY_SIZE(i2c_mux_72),
-//     },
-//     {
-//         .modes = i2c_mux_73,
-//         .num_modes = ARRAY_SIZE(i2c_mux_73),
-//     },
-//     {
-//         .modes = i2c_mux_74,
-//         .num_modes = ARRAY_SIZE(i2c_mux_74),
-//     },
-// };
-
-// /* Optical Module bus 1-7 i2c muxes info */
-// static struct i2c_board_info i2c_info[] = {
-//     {
-//         I2C_BOARD_INFO("pca9548", 0x70),
-//         .platform_data = &om_muxes[0],
-//     },
-//     {
-//         I2C_BOARD_INFO("pca9548", 0x71),
-//         .platform_data = &om_muxes[1],
-//     },
-//     {
-//         I2C_BOARD_INFO("pca9548", 0x72),
-//         .platform_data = &om_muxes[2],
-//     },
-//     {
-//         I2C_BOARD_INFO("pca9548", 0x73),
-//         .platform_data = &om_muxes[3],
-//     },
-//     {
-//         I2C_BOARD_INFO("pca9548", 0x74),
-//         .platform_data = &om_muxes[4],
-//     },
-// };
-
-// /* RESOURCE SEPERATES BY FUNCTION */
-// /* Resource IOMEM for FPGA extened i2c bus 0 */
-// static struct resource cls_i2c_res_0[] = {
-//     {
-//         .start = 0x00010000,
-//         .end = 0x00010FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 1 */
-// static struct resource cls_i2c_res_1[] = {
-//     {
-//         .start = 0x00011000,
-//         .end = 0x00011FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 2 */
-// static struct resource cls_i2c_res_2[] = {
-//     {
-//         .start = 0x00012000,
-//         .end = 0x00012FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 3 */
-// static struct resource cls_i2c_res_3[] = {
-//     {
-//         .start = 0x00013000,
-//         .end = 0x00013FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 4 */
-// static struct resource cls_i2c_res_4[] = {
-//     {
-//         .start = 0x00014000,
-//         .end = 0x00014FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 5 */
-// static struct resource cls_i2c_res_5[] = {
-//     {
-//         .start = 0x00015000,
-//         .end = 0x00015FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 6 */
-// static struct resource cls_i2c_res_6[] = {
-//     {
-//         .start = 0x00016000,
-//         .end = 0x00016FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 7 */
-// static struct resource cls_i2c_res_7[] = {
-//     {
-//         .start = 0x00017000,
-//         .end = 0x00017FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 8 */
-// static struct resource cls_i2c_res_8[] = {
-//     {
-//         .start = 0x00018000,
-//         .end = 0x00018FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
-// /* Resource IOMEM for FPGA extened i2c bus 9 */
-// static struct resource cls_i2c_res_9[] = {
-//     {
-//         .start = 0x00019000,
-//         .end = 0x00019FFF,
-//         .flags = IORESOURCE_MEM,
-//     },
-// };
-
+/* RESOURCE SEPERATES BY FUNCTION */
+/* Resource IOMEM for i2c bus 1 for FPGA_BMC_I2C1*/
 static struct resource cls_i2c_res_1[] = {
     {
         .start = 0x800,
@@ -454,6 +509,23 @@ static struct resource cls_i2c_res_11[] = {
         .flags = IORESOURCE_MEM,
     },
 };
+/* Resource IOMEM for reg access */
+static struct resource reg_io_res[] = {
+    {
+        .start = 0x00,
+        .end = 0xFF,
+        .flags = IORESOURCE_MEM,
+    },
+};
+
+/* Resource IOMEM for spi flash firmware upgrade */
+static struct resource spi_flash_res[] = {
+    {
+        .start = 0x1200,
+        .end = 0x121F,
+        .flags = IORESOURCE_MEM,
+    },
+};
 
 /* Resource IOMEM for front panel XCVR */
 static struct resource xcvr_res[] = {
@@ -464,15 +536,13 @@ static struct resource xcvr_res[] = {
     },
 };
 
-/* Resource IOMEM for front panel XCVR */
-static struct resource fpga_res[] = {
-    {
-        .start = 0x00,
-        .end = 0xFF,
-        .flags = IORESOURCE_MEM,
-    },
-};
-
+/* if have i2c-mux pca9548, .num_devices=ARRAY_SIZE(i2c_info_X); .devices =
+ * i2c_info_X. if not, .num_devices = 0; .devices = NULL
+ *
+ * Notes: Some FPGA_I2C_Master buses are shared with BMC,
+ * 		these buses need to be uninitialized because it interfere the
+ * BMC activity
+ */
 static struct i2c_bus_config i2c_bus_configs[] = {
     {
         .id = 1,
@@ -642,150 +712,125 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 };
 
 /* xcvr front panel mapping */
+
 static struct port_info front_panel_ports[] = {
     {"SFP1", 1, SFP}, {"SFP2", 2, SFP},
     /* END OF LIST */
 };
-
-static struct cls_xcvr_platform_data xcvr_data[] = {
-    {
-        .port_reg_size = 0x04,
-        .num_ports = ARRAY_SIZE(front_panel_ports),
-        .devices = front_panel_ports,
-    },
+static struct cls_xcvr_platform_data xcvr_data = {
+    .port_reg_size = 0x10,
+    .num_ports = ARRAY_SIZE(front_panel_ports),
+    .devices = front_panel_ports,
 };
 
 // TODO: Add a platform configuration struct, and use probe as a factory,
 //	 so xcvr, fwupgrade device can configured as options.
 
 static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
-    int err;
-    int num_i2c_bus, i = 0, ret, vector;
-    int bmc_present = 0; /* 0-present 1-absent */
-    unsigned long rstart;
-    void __iomem *base_addr;
-    struct switchbrd_priv *priv;
+    int ret = 0;
+    struct fpga_priv *priv;
     struct platform_device **i2cbuses_pdev;
-    struct platform_device *fpga_pdev;
+    struct platform_device *regio_pdev;
     struct platform_device *xcvr_pdev;
-    // uint32_t fpga_type;
+    unsigned long rstart;
+    int num_i2c_bus, i;
+    int err;
 
     err = pci_enable_device(dev);
     if (err) {
         dev_err(&dev->dev, "Failed to enable PCI device\n");
         goto err_exit;
     }
-    pci_set_master(dev);
 
-    /* Check for valid MMIO address */
-    base_addr = pci_iomap(dev, MMIO_BAR, 0);
-    if (!base_addr) {
-        dev_err(&dev->dev, "Failed to map PCI device mem\n");
-        err = -ENODEV;
+    if (dev) {
+        err = fpga_pci_probe(dev);
+    } else {
+        ret = -ENODEV;
+        goto err_exit;
+    }
+    if (0 != err) {
+        dev_err(&dev->dev, "Failed to do fpga pci probe\n");
         goto err_disable_device;
     }
 
-    ret = pci_enable_msi(dev);
-    if (ret) {
-        dev_err(&dev->dev, "failed to allocate MSI entry\n");
-        goto err_unmap;
+    fpga_data = devm_kzalloc(&dev->dev, sizeof(struct silverstone_fpga_data),
+                             GFP_KERNEL);
+    if (!fpga_data) {
+        ret = -ENOMEM;
+        goto err_disable_device;
     }
 
-#if 0 /* only one FPGA, so not to judge FPGA TYTE*/
-	fpga_type = ioread32(base_addr + FPGA_TYPE_ADDR);
-	printk("fpga Type:0x%8.8x\n",fpga_type);
-	if (fpga_type == FPGA_CMM_TYPE) {
-		err = 0;
-		goto err_exit;
-	}
-#endif
-    bmc_present =
-        (ioread32(base_addr + FPGA_OTHER_CR_ADDR) >> BMC_PRESENT_BIT) & 0x01;
-    if (bmc_present == BMC_PRESENT) {
-        printk("BMC present\n");
-    } else {
-        printk("BMC absent\n");
-    }
-
+    /* Check for valid MMIO address */
     rstart = pci_resource_start(dev, MMIO_BAR);
     if (!rstart) {
         dev_err(&dev->dev,
                 "Switchboard base address uninitialized, "
                 "check FPGA\n");
         err = -ENODEV;
-        goto err_diable_msi;
+        goto err_disable_device;
     }
 
     dev_dbg(&dev->dev, "BAR%d res: 0x%lx-0x%llx\n", MMIO_BAR, rstart,
             pci_resource_end(dev, MMIO_BAR));
 
-    printk("BAR%d res: 0x%lx-0x%llx\n", MMIO_BAR, rstart,
-           pci_resource_end(dev, MMIO_BAR));
-
-    priv = devm_kzalloc(&dev->dev, sizeof(struct switchbrd_priv), GFP_KERNEL);
+    priv = devm_kzalloc(&dev->dev, sizeof(struct fpga_priv), GFP_KERNEL);
     if (!priv) {
         err = -ENOMEM;
-        goto err_diable_msi;
+        goto err_disable_device;
     }
 
     pci_set_drvdata(dev, priv);
+
+    swfpga = kobject_create_and_add("FPGA4SW", &dev->dev.kobj);
+    if (!swfpga) {
+        ret = -ENOMEM;
+        goto err_disable_device;
+    }
+
+    ret = sysfs_create_group(swfpga, &fpga_attr_grp);
+    if (ret != 0) {
+        printk(KERN_ERR "Cannot create FPGA sysfs attributes\n");
+        goto err_remove_fpga;
+    }
+
     num_i2c_bus = ARRAY_SIZE(i2c_bus_configs);
     i2cbuses_pdev = devm_kzalloc(
         &dev->dev, num_i2c_bus * sizeof(struct platform_device *), GFP_KERNEL);
 
-    fpga_res[0].start += rstart;
-    fpga_res[0].end += rstart;
+    reg_io_res[0].start += rstart;
+    reg_io_res[0].end += rstart;
+
     xcvr_res[0].start += rstart;
     xcvr_res[0].end += rstart;
-    printk("num_i2c_bus = %x,fpga_res start/end %x/%x,restart=%x\n",
-           num_i2c_bus, fpga_res[0].start, fpga_res[0].end, rstart);
-    printk("num_i2c_bus = %x,xcvr_res start/end %x/%x,restart=%x\n",
-           num_i2c_bus, xcvr_res[0].start, xcvr_res[0].end, rstart);
 
-    priv->i2c_devname = "cls-i2c-xiic";
-    priv->xcvr_devname = "fpga-xcvr";
-    priv->fpga_devname = "fpga-sys";
+    regio_pdev = platform_device_register_resndata(
+        &dev->dev, "cls-swbrd-io", -1, reg_io_res, ARRAY_SIZE(reg_io_res), NULL,
+        0);
 
-    fpga_pdev = platform_device_register_resndata(
-        NULL, priv->fpga_devname, -1, fpga_res, ARRAY_SIZE(fpga_res), NULL, 0);
-    if (IS_ERR(fpga_pdev)) {
-        dev_err(&dev->dev, "Failed to register fpga node\n");
-        err = PTR_ERR(fpga_pdev);
-        goto err_unmap;
+    if (IS_ERR(regio_pdev)) {
+        dev_err(&dev->dev, "Failed to register cls-swbrd-io\n");
+        err = PTR_ERR(regio_pdev);
+        goto err_remove_grp_fpga;
     }
-    printk("register fpga node\n");
 
     xcvr_pdev = platform_device_register_resndata(
-        NULL, priv->xcvr_devname, -1, xcvr_res, ARRAY_SIZE(xcvr_res),
-        &xcvr_data, sizeof(xcvr_data));
+        NULL, "fpga-xcvr", -1, xcvr_res, ARRAY_SIZE(xcvr_res), &xcvr_data,
+        sizeof(xcvr_data));
+
     if (IS_ERR(xcvr_pdev)) {
         dev_err(&dev->dev, "Failed to register xcvr node\n");
         err = PTR_ERR(xcvr_pdev);
-        goto err_unregister_fpga_dev;
+        goto err_unregister_regio;
     }
-    printk("register xcvr node\n");
 
-    if (bmc_present == BMC_PRESENT) {
-        i += FPGA_EXCLUDE_MIN_BUS; /* skip share bus so there's no dual i2c
-                                      masters situation */
-    } else {
-        i = 0;
-    }
-    for (; i < num_i2c_bus; i++) {
-        /* override resource with MEM/IO resource offset */
+    for (i = 0; i < num_i2c_bus; i++) {
         i2c_bus_configs[i].res[0].start += rstart;
         i2c_bus_configs[i].res[0].end += rstart;
 
-        /* all fpga i2c bus share pci device msi irq */
-        i2c_bus_configs[i].pdata.irq = dev->irq;
-        dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",
-                i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start,
-                i2c_bus_configs[i].res[0].end);
-        printk("bus id:%d, i2c_bus_configs[%d].res[0].start/end=%x:%x\n",
-               i2c_bus_configs[i].id, i, i2c_bus_configs[i].res[0].start,
+        printk("start %x ... end %x\n", i2c_bus_configs[i].res[0].start,
                i2c_bus_configs[i].res[0].end);
 
-        switch (i + 1) {
+        switch (i2c_bus_configs[i].id) {
             case 1:
                 i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_1;
                 break;
@@ -823,25 +868,35 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
                 i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
         }
 
+        dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",
+                i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start,
+                i2c_bus_configs[i].res[0].end);
+
         i2cbuses_pdev[i] = platform_device_register_resndata(
-            &dev->dev, priv->i2c_devname, i2c_bus_configs[i].id,
-            i2c_bus_configs[i].res, i2c_bus_configs[i].num_res,
-            &i2c_bus_configs[i].pdata, sizeof(i2c_bus_configs[i].pdata));
+            &dev->dev,
+            "cls-ocores-i2c",  //"ocores-i2c", "i2c-ocores","cls-ocores-i2c"
+            i2c_bus_configs[i].id, i2c_bus_configs[i].res,
+            i2c_bus_configs[i].num_res, &i2c_bus_configs[i].pdata,
+            sizeof(i2c_bus_configs[i].pdata));
+
         if (IS_ERR(i2cbuses_pdev[i])) {
-            dev_err(&dev->dev, "Failed to register ocores-i2c-cls.%d\n",
+            dev_err(&dev->dev, "Failed to register ocores-i2c.%d\n",
                     i2c_bus_configs[i].id);
             err = PTR_ERR(i2cbuses_pdev[i]);
             goto err_unregister_ocore;
         }
     }
 
-    priv->iomem = base_addr;
     priv->base = rstart;
     priv->num_i2c_bus = num_i2c_bus;
     priv->i2cbuses_pdev = i2cbuses_pdev;
+    priv->regio_pdev = regio_pdev;
     priv->xcvr_pdev = xcvr_pdev;
-    priv->fpga_pdev = fpga_pdev;
-    printk("base_addr=%x\n", base_addr);
+
+    // Set default read address to VERSION
+    fpga_data->fpga_read_addr = fpga_dev.data_base_addr + FPGA_VERSION;
+    mutex_init(&fpga_data->fpga_lock);
+
     return 0;
 
 err_unregister_ocore:
@@ -850,17 +905,15 @@ err_unregister_ocore:
             platform_device_unregister(priv->i2cbuses_pdev[i]);
         }
     }
+err_unregister_xcvr:
     platform_device_unregister(xcvr_pdev);
-err_unregister_fpga_dev:
-    platform_device_unregister(fpga_pdev);
-#if 0
-err_free_vector:
-	pci_free_irq_vectors(dev);
-#endif
-err_diable_msi:
-    pci_disable_msi(dev);
-err_unmap:
-    pci_iounmap(dev, base_addr);
+err_unregister_regio:
+    platform_device_unregister(regio_pdev);
+err_remove_grp_fpga:
+    sysfs_remove_group(swfpga, &fpga_attr_grp);
+err_remove_fpga:
+    kobject_put(swfpga);
+    fpga_pci_remove();
 err_disable_device:
     pci_disable_device(dev);
 err_exit:
@@ -869,41 +922,40 @@ err_exit:
 
 static void cls_fpga_remove(struct pci_dev *dev) {
     int i;
-    struct switchbrd_priv *priv = pci_get_drvdata(dev);
+    struct fpga_priv *priv = pci_get_drvdata(dev);
 
     for (i = 0; i < priv->num_i2c_bus; i++) {
         if (priv->i2cbuses_pdev[i])
             platform_device_unregister(priv->i2cbuses_pdev[i]);
     }
     platform_device_unregister(priv->xcvr_pdev);
-    platform_device_unregister(priv->fpga_pdev);
-#if 0
-	pci_free_irq_vectors(dev);
-#endif
-    pci_disable_msi(dev);
-    pci_iounmap(dev, priv->iomem);
+    platform_device_unregister(priv->regio_pdev);
+    sysfs_remove_group(swfpga, &fpga_attr_grp);
+    kobject_put(swfpga);
+    fpga_pci_remove();
     pci_disable_device(dev);
+
     return;
 };
 
-static const struct pci_device_id pci_clsswbrd[] = {
+static const struct pci_device_id pci_fpga[] = {
     {PCI_VDEVICE(XILINX, FPGA_PCIE_DEVICE_ID)},
     {
         0,
     }};
 
-MODULE_DEVICE_TABLE(pci, pci_clsswbrd);
+MODULE_DEVICE_TABLE(pci, pci_fpga);
 
-static struct pci_driver cls_pci_driver = {
+static struct pci_driver cls_fpga_pci_driver = {
     .name = DRV_NAME,
-    .id_table = pci_clsswbrd,
+    .id_table = pci_fpga,
     .probe = cls_fpga_probe,
     .remove = cls_fpga_remove,
 };
 
-module_pci_driver(cls_pci_driver);
+module_pci_driver(cls_fpga_pci_driver);
 
-MODULE_AUTHOR("Wirut Getbamrung<wgetbumr@celestica.com>");
-MODULE_DESCRIPTION("Celestica MRVL_CPO1 Baseboard FPGA driver");
+MODULE_AUTHOR("CLS");
+MODULE_DESCRIPTION("Celestica Blackstone fpga driver");
 MODULE_VERSION(MOD_VERSION);
 MODULE_LICENSE("GPL");
