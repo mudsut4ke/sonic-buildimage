@@ -9,8 +9,6 @@
  * Andreas Larsson <andreas@gaisler.com>
  */
 
-#include "cls-i2c-ocores.h"
-
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/err.h>
@@ -26,6 +24,8 @@
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/wait.h>
+
+#include "cls-i2c-ocores.h"
 
 /*
  * 'process_lock' exists because ocores_process() and ocores_process_timeout()
