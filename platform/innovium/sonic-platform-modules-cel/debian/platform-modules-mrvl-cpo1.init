@@ -24,7 +24,8 @@ start)
 		modprobe come_cpld
 
 		# FPGA driver load
-		modprobe cls-fpga
+		modprobe fpga_device
+		modprobe fpga_system
 		modprobe cls-i2c-ocores
 		modprobe fpga-xcvr
        	
@@ -51,7 +52,7 @@ stop)
 
 		# CPLD driver unload
 		rmmod come_cpld
-		modprobe ctrl_cpld
+		rmmod ctrl_cpld
 
 		rmmod mc24lc64t
 		rmmod i2c-dev
