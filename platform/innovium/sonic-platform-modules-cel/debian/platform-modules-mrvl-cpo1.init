@@ -24,8 +24,8 @@ start)
 		modprobe come_cpld
 
 		# FPGA driver load
-		modprobe fpga_device
-		modprobe fpga_system
+		modprobe fpga_b_device
+		modprobe fpga_b_sys
 		modprobe cls-i2c-ocores
 		modprobe fpga-xcvr
        	
@@ -48,7 +48,8 @@ stop)
 		# FPGA driver unload
 		rmmod fpga-xcvr
 		rmmod cls-i2c-ocores
-        rmmod cls-fpga
+        rmmod fpga_b_sys
+		rmmod fpga_b_device
 
 		# CPLD driver unload
 		rmmod come_cpld

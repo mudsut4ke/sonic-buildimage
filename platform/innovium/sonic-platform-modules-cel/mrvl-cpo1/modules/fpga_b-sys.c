@@ -16,7 +16,7 @@
 
 #define FPGA_VERSION 0x0000
 #define FPGA_SCRATCH 0x0004
-#define FPGA_REGISTER_SIZE 0x2000000
+#define FPGA_REGISTER_SIZE 0x1000
 
 /*
  * fpga_priv - port fpga private data
