@@ -579,8 +579,9 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
         i2c_bus_configs[i].res[0].start += rstart;
         i2c_bus_configs[i].res[0].end += rstart;
 
-        /* all fpga i2c bus share pci device msi irq */
-        i2c_bus_configs[i].pdata.irq = dev->irq;
+        // /* all fpga i2c bus share pci device msi irq */
+        // i2c_bus_configs[i].pdata.irq = dev->irq;
+
         dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",
                 i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start,
                 i2c_bus_configs[i].res[0].end);
