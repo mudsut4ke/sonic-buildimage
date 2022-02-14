@@ -62,9 +62,9 @@ Baseboard FPGA:
     0x00 /* FPGA_OTHER_CR_ADDR bit8 0-bmc present 1-bmc \
             absent*/
 
-#define FPGA_EXCLUDE_MIN_BUS                                                \
-    8 /* iic core 0-7 is share with BMC, 8 and 9 is for FPGA only, mask 0-7 \
-         when BMC is present*/
+// #define FPGA_EXCLUDE_MIN_BUS                                                \
+//     8 /* iic core 0-7 is share with BMC, 8 and 9 is for FPGA only, mask 0-7 \
+//          when BMC is present*/
 
 #define MMIO_BAR 0
 #define PCA9548_I2C_BUS_OFS \
@@ -513,7 +513,7 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
     rstart = pci_resource_start(dev, MMIO_BAR);
     if (!rstart) {
         dev_err(&dev->dev,
-                "Switchboard base address uninitialized, "
+                "Baseboard base address uninitialized, "
                 "check FPGA\n");
         err = -ENODEV;
         goto err_diable_msi;
@@ -568,12 +568,12 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
     }
     printk("register xcvr node\n");
 
-    if (bmc_present == BMC_PRESENT) {
-        i += FPGA_EXCLUDE_MIN_BUS; /* skip share bus so there's no dual i2c
-                                      masters situation */
-    } else {
-        i = 0;
-    }
+    // if (bmc_present == BMC_PRESENT) {
+    //     i += FPGA_EXCLUDE_MIN_BUS; /* skip share bus so there's no dual i2c
+    //                                   masters situation */
+    // } else {
+    //     i = 0;
+    // }
     for (; i < num_i2c_bus; i++) {
         /* override resource with MEM/IO resource offset */
         i2c_bus_configs[i].res[0].start += rstart;

@@ -256,6 +256,8 @@ static int cls_fpga_probe(struct platform_device *pdev) {
         printk(KERN_ERR "Cannot create FPGA system sysfs attributes\n");
         goto err_remove_fpga;
     }
+    // Set default read address to VERSION
+    fpga->fpga_read_addr = fpga->base + FPGA_VERSION;
     return 0;
 
 err_remove_fpga:
