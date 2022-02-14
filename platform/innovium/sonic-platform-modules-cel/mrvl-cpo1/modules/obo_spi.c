@@ -5,7 +5,7 @@
 #include <linux/delay.h>
 
 #include "obo_spi.h"
-#include "marvell_switch_fpga.h"
+#include "fpga_sw.h"
 
 u32 timeout = 300000;
 u32 sleeptime = 5000;
